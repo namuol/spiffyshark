@@ -1,0 +1,15 @@
+config = require './config'
+{exec} = require 'child_process'
+
+handle_errors = (err, stdout, stderr) ->
+  throw err if err
+  console.log stdout + stderr
+
+
+task 'build', 'Create minified JS output', ->
+  console.log 'build her a cake or something...'
+
+  exec 'coffee -c grooveshark_xspf.coffee', ->
+    handle_errors arguments...
+
+    exec 'cat xspf_parser.js grooveshark_xspf.js | jsmin > grooveshark_xspf.min.js', handle_errors
