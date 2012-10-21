@@ -9,21 +9,22 @@ html ->
     link rel:'stylesheet', href:'style.css'
     link rel:'stylesheet', href:'bootstrap/css/bootstrap-responsive.css'
 
+    script src:'/coffeecup.js'
     script src:'//code.jquery.com/jquery.js'
     script src:'/zappa/zappa.js'
-    script src:'/bootstrap/js/bootstrap.min.js'
+    script src:'/bootstrap/js/bootstrap.js'
 
-  div class:'navbar navbar-fixed-top', ->
+  div class:'navbar navbar-inverse navbar-fixed-top', ->
     div class:'navbar-inner', ->
       div class:'container-fluid', ->
         a class:'brand', 'SpiffyShark'
         div class:'', ->
           ul class:'nav', ->
             li -> a href:'#clients', ->
-              i class:'icon-list'
+              i class:'icon-white icon-list'
               text ' Playlists'
             li -> a href:'#help', ->
-              i class:'icon-question-sign'
+              i class:'icon-white icon-question-sign'
               text ' Help'
 
           div id:'account-nav-container', ->
@@ -44,7 +45,7 @@ html ->
                         div class:'controls', ->
                           div class:'input-prepend', ->
                             span class:'add-on', ->
-                              i class:'icon-user'
+                              i class:'icon-white icon-user'
                             input
                               id:'log-in-username'
                               name:'username'
@@ -54,7 +55,7 @@ html ->
                         div class:'controls', ->
                           div class:'input-prepend', ->
                             span class:'add-on', ->
-                              i class:'icon-lock'
+                              i class:'icon-white icon-lock'
                             input
                               id:'log-in-pass'
                               name:'password'
@@ -70,7 +71,7 @@ html ->
                     class:'dropdown-toggle',
                     'data-toggle':'dropdown'
                   , ->
-                    i class:'icon-user'
+                    i class:'icon-white icon-user'
                     span id:'username-display', " #{@user.name} "
                     b class:'caret', ''
 
@@ -81,7 +82,13 @@ html ->
                     li -> a href:'#billing', ->
                       i class:'icon-list-alt'
                       text ' Billing History'
-                    li -> button id:'log-out', class:'btn pull-right', 'Log Out'
+                    li ->
+                    form action:'logout', method:'post', ->
+                      button
+                        id:'log-out'
+                        class:'btn pull-right'
+                        type:'submit'
+                      , 'Log Out'
 
   div id:'content', class:'container-fluid', ->
     if @errors.length > 0
