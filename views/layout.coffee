@@ -12,18 +12,21 @@ html ->
     script src:'/coffeecup.js'
     script src:'//code.jquery.com/jquery.js'
     script src:'/zappa/zappa.js'
+    script src:'/zappa/sammy.js'
+    script src:'/xspf_parser.js'
     script src:'/bootstrap/js/bootstrap.js'
 
   div class:'navbar navbar-inverse navbar-fixed-top', ->
     div class:'navbar-inner', ->
       div class:'container-fluid', ->
-        a class:'brand', 'SpiffyShark'
+        a href:'#/', class:'brand', 'Spiffyshark'
         div class:'', ->
           ul class:'nav', ->
-            li -> a href:'#clients', ->
-              i class:'icon-white icon-list'
-              text ' Playlists'
-            li -> a href:'#help', ->
+            if @user
+              li -> a href:'#/playlists', ->
+                i class:'icon-white icon-list'
+                text ' Playlists'
+            li -> a href:'#/help', ->
               i class:'icon-white icon-question-sign'
               text ' Help'
 
@@ -45,7 +48,7 @@ html ->
                         div class:'controls', ->
                           div class:'input-prepend', ->
                             span class:'add-on', ->
-                              i class:'icon-white icon-user'
+                              i class:'icon-user'
                             input
                               id:'log-in-username'
                               name:'username'
@@ -55,7 +58,7 @@ html ->
                         div class:'controls', ->
                           div class:'input-prepend', ->
                             span class:'add-on', ->
-                              i class:'icon-white icon-lock'
+                              i class:'icon-lock'
                             input
                               id:'log-in-pass'
                               name:'password'
@@ -76,21 +79,23 @@ html ->
                     b class:'caret', ''
 
                   ul class:'dropdown-menu', role:'menu', ->
+                    ###
                     li -> a href:'#subscriptions', ->
                       i class:'icon-shopping-cart'
                       text ' Subscriptions'
                     li -> a href:'#billing', ->
                       i class:'icon-list-alt'
                       text ' Billing History'
+                    ###
                     li ->
-                    form action:'logout', method:'post', ->
-                      button
-                        id:'log-out'
-                        class:'btn pull-right'
-                        type:'submit'
-                      , 'Log Out'
+                      form action:'logout', method:'post', ->
+                        button
+                          id:'log-out'
+                          class:'btn pull-right'
+                          type:'submit'
+                        , 'Log Out'
 
-  div id:'content', class:'container-fluid', ->
+  div id:'content', class:'container', ->
     if @errors.length > 0
       div class:'row-fluid', ->
         div class:'errors_list span6', ->
@@ -99,4 +104,26 @@ html ->
               button type:'button', class:'close', 'data-dismiss':'alert', '×'
               strong 'error: '
               text err.msg
+
+    div class:'content', id:'main', ->
+      div class:'row', ->
+        div class:'span6', ->
+          h1 id:'main_brand', ->
+            text 'Spiffyshark'
+
+      div class:'row', ->
+        div class:'span4', ->
+          p """
+          Upload your playlist to Grooveshark.
+          """
+        div class:'span6', ->
+          div class:'input-append', ->
+            form id:'upload', enctype:'multipart/form-data', action:'#/upload_playlist', method:'post', ->
+              input type:'file'
+              button
+                type:'submit'
+                class:"btn btn-primary"
+                href:'#how-it-works'
+                , 'Upload'
+
     text @body

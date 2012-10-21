@@ -1,5 +1,12 @@
 @import 'nib'
 
+@font-face {
+  font-family 'Overlock'
+  font-style normal
+  font-weight 900
+  src local('Overlock-Black'), url(http://themes.googleusercontent.com/static/fonts/overlock/v2/l1JcQwKaHzEH7sWBQ9t-7obN6UDyHWBl620a-IRfuBk.woff) format('woff')
+}
+
 @-webkit-keyframes rotate
   from
     -webkit-transform rotate(0deg)
@@ -12,8 +19,33 @@ i.icon-refresh.animooted
   -webkit-animation-iteration-count  infinite
   -webkit-animation-timing-function  linear
 
+#main_brand
+  font-family 'Overlock'
+  font-style italic
+  font-size 64px
+
+.brand
+  font-family 'Overlock'
+  font-style italic
+  color white !important
+
 body
   padding-top 60px
 
+//.navbar-inner
+//  background #70b348 !important
+
 .nav .dropdown-menu
   padding 0.5em
+
+ul
+  list-style none
+
+#playlists_list
+  margin 0
+
+#playlists_list li
+  padding 5px
+
+#playlists_list li:nth-child(odd)
+  background #eee
