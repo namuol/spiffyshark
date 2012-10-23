@@ -11,8 +11,10 @@ html ->
 
     script src:'/coffeecup.js'
     script src:'//code.jquery.com/jquery.js'
+    script src:'//cdnjs.cloudflare.com/ajax/libs/moment.js/1.7.2/moment.min.js'
     script src:'/zappa/zappa.js'
     script src:'/zappa/sammy.js'
+    script src:'/async.js'
     script src:'/xspf_parser.js'
     script src:'/bootstrap/js/bootstrap.js'
 

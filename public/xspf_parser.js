@@ -3,9 +3,14 @@
 // Released under the LGPL 3
 // http://www.gnu.org/licenses/lgpl.html
 
-XSPF = {
+if (typeof module === 'undefined')
+  module = {}
+if (typeof window === 'undefined' && typeof DOMParser === 'undefined')
+  DOMParser = require('xmldom').DOMParser;
+
+module.exports = XSPF = {
   XMLfromString: function(string) {
-    if (window.ActiveXObject) {
+    if (typeof window === 'object' && window.ActiveXObject) {
       var doc = new ActiveXObject("Microsoft.XMLDOM");
       doc.async = "false";
       doc.loadXML(string);
