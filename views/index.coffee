@@ -112,15 +112,23 @@ coffeescript ->
           $(el).find('td.gs').html song_search_result_template data
           if data.songs? and data.songs.length > 0
             playlist.tracks[i] = data.songs[0].SongID
-          setTimeout ->
-            cb null
-          , 100
+          cb null
         .error (err) ->
-          $(el).find('td.gs').html 'ERROR'
-          setTimeout ->
-            cb null
-          , 100
+          $(el).find('td.gs').html 'ERROR <button class="btn btn-small try-again">Try Again</button>'
+          cb null
           
+
+      $('#search_songs').live 'click', (e) ->
+        $(@).attr('disabled','disabled').html """
+          <i class='icon-refresh animooted'></i>
+          Please Wait...
+        """
+        async.forEachLimit $('.uploaded_playlist tbody tr'), 3, (el, cb) =>
+          getSong el, cb
+        , (err) ->
+          console.log err
+          $('#search_songs').hide()
+          $('#generate_playlist').show()
 
       $('#generate_playlist').live 'click', (e) ->
         $.ajax
@@ -132,18 +140,10 @@ coffeescript ->
           #@redirect '#/playlist/' + encodeURIComponent data.url
           $('#generate_playlist').hide().after($("<a href=#{data.url.replace('listen.','')}>View Your Playlist!</a>"))
 
-      $('#search_songs').live 'click', (e) ->
-        $(@).attr('disabled','disabled').html """
-          <i class='icon-refresh animooted'></i>
-          Please Wait...
-        """
-        async.forEachLimit $('.uploaded_playlist tbody tr'), 1, (el, cb) =>
-          getSong el, cb
-        , (err) ->
-          console.log err
-          $('#search_songs').hide()
-          $('#generate_playlist').show()
-      
+       $('button.try-again').live 'click', (e) ->
+        getSong $(@).parent().parent(), ->
+          # DO NOTHING
+     
       @get '#/', ->
         $('.nav .active').removeClass 'active'
         $('.content').hide()

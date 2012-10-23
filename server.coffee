@@ -92,12 +92,12 @@ zappa.run config.port, ->
       errors: @request.session.errors
 
     @request.session.errors = []
-
+  
   @get '/song', ->
     gs_noauth.request 'getSongSearchResults',
       query: @query.creator + ' ' + @query.title
       country: 'USA'
-      limit: 3
+      limit: 1
     , (err, status, gs_body) =>
       console.log '==============================\\'
       console.log err
@@ -110,9 +110,6 @@ zappa.run config.port, ->
         gs_noauth.request 'getSongURLFromSongID',
           songID: song.SongID
         , (err, status, gs_body) =>
-          console.log err
-          console.log status
-          console.log gs_body
           return cb(err) if err
           song.url = gs_body.url
           cb null
