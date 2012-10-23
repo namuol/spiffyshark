@@ -2,6 +2,8 @@ module.exports =
   port: 3033
   grooveshark_key: 'YOUR_GROOVESHARK_KEY'
   grooveshark_secret: 'YOUR_GROOVESHARK_SECRET'
+  gs_anon_acct: 'YOUR_GROOVESHARK_ACCOUNT'
+  gs_anon_password: 'YOUR_GROOVESHARK_PASSWORD'
   parse_app_id: 'YOUR_PARSE_APP_ID'
   parse_rest_key: 'YOUR_PARSE_REST_KEY'
   parse_user_password: 'A_SECRET_PASSWORD_FOR_ALL_PARSE_USERS'
