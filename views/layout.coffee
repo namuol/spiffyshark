@@ -9,14 +9,8 @@ html ->
     link rel:'stylesheet', href:'style.css'
     link rel:'stylesheet', href:'bootstrap/css/bootstrap-responsive.css'
 
-    script src:'/coffeecup.js'
-    script src:'//code.jquery.com/jquery.js'
-    script src:'//cdnjs.cloudflare.com/ajax/libs/moment.js/1.7.2/moment.min.js'
-    script src:'/zappa/zappa.js'
-    script src:'/zappa/sammy.js'
-    script src:'/async.js'
-    script src:'/xspf_parser.js'
-    script src:'/bootstrap/js/bootstrap.js'
+    coffeescript ->
+      window.scripts = []
 
   div class:'navbar navbar-inverse navbar-fixed-top', ->
     div class:'navbar-inner', ->
@@ -108,6 +102,9 @@ html ->
               text err.msg
 
     div class:'content', id:'main', ->
+      div class:'row-fluid', ->
+        div id:'msgs', class:'errors_list span6'
+
       div class:'row', ->
         div class:'span6', ->
           h1 id:'main_brand', ->
@@ -129,3 +126,17 @@ html ->
                 , 'Upload'
 
     text @body
+
+    script src:'/coffeecup.js'
+    script src:'//code.jquery.com/jquery.js'
+    script src:'//cdnjs.cloudflare.com/ajax/libs/moment.js/1.7.2/moment.min.js'
+    script src:'/zappa/zappa.js'
+    script src:'/zappa/sammy.js'
+    script src:'/socket.io/socket.io.js'
+    script src:'/async.js'
+    script src:'/xspf_parser.js'
+    script src:'/bootstrap/js/bootstrap.js'
+
+    coffeescript ->
+      for script in window.scripts
+        script()

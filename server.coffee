@@ -33,37 +33,26 @@ zappa.run config.port, ->
     return clients[req.session.user.id]
 
   handle_errors = (req, res, err, status) ->
-    console.log err
-    console.log status
     if req.accepts 'json'
-      console.log 5
       if err and (err.length or err.error)
-        console.log 6
-        console.error 'ERROR (json):' + err
         if err.length and err[0].message # gs error
-          console.log err[0].message
           res.send err:
             msg: err[0].message
           , 500
         else
           res.send err:err, status
-        console.log 7
         return true
     else if req.accepts 'html'
-      console.log 1
       if err
         if err.length
-          console.log 2
           for e in err
             req.session.errors.push
               msg: e.message
           return false
         else if err.error
-          console.log 3
           req.session.errors.push
             msg: err.error
           return false
-      console.log 4
       return false
 
   requiresLogin = (req, res, next, redirect='/') ->
@@ -86,37 +75,122 @@ zappa.run config.port, ->
       if not req.session.errors
         req.session.errors = []
       next()
+
   @get '/', ->
     @render 'index',
       user: @request.session.user
       errors: @request.session.errors
 
     @request.session.errors = []
-  
-  @get '/song', ->
-    gs_noauth.request 'getSongSearchResults',
-      query: @query.creator + ' ' + @query.title
-      country: 'USA'
-      limit: 1
-    , (err, status, gs_body) =>
-      console.log '==============================\\'
-      console.log err
-      console.log status
-      console.log gs_body
-      return if handle_errors @request, @response, err, status
-      calls = []
 
-      async.forEach gs_body.songs, (song, cb) =>
-        gs_noauth.request 'getSongURLFromSongID',
-          songID: song.SongID
-        , (err, status, gs_body) =>
-          return cb(err) if err
-          song.url = gs_body.url
-          cb null
-      , (err) =>
+  searchQueue = undefined
+  urlQueue = undefined
+
+  setupSearchQueue = ->
+    searchQueue = async.queue (task, cb) ->
+      task cb
+    , 1
+
+    # HACK
+    searchQueue.drain = ->
+      setupSearchQueue()
+
+    searchQueue.rateLimit 50
+
+  setupUrlQueue = ->
+    urlQueue = async.queue (task, cb) ->
+      task cb
+    , 1
+
+    # HACK
+    urlQueue.drain = ->
+      setupUrlQueue()
+
+    urlQueue.rateLimit 150
+  
+  setupSearchQueue()
+  setupUrlQueue()
+  
+  @get '/gs_song/:id', ->
+    urlQueue.push (urlCallback) =>
+      gs_noauth.request 'getSongURLFromSongID',
+        songID: @params.id
+      , (err, status, gs_body) =>
+        urlCallback()
         return if handle_errors @request, @response, err, status
-        @send gs_body
-        console.log '==============================/'
+
+        @redirect gs_body.url
+
+  @on 'song': ->
+    console.log 'SONG'
+    searchQueue.push (searchCallback) =>
+      console.log 'TASK'
+      if @socket.disconnected
+        console.log 'DISCONNECTED'
+        searchCallback()
+        return
+
+      ###
+      @ack
+        "songs": [
+            "SongID": 25279548
+            "SongName": "Next Girl"
+            "ArtistID": 3705
+            "ArtistName": "The Black Keys"
+            "AlbumID": 4151255
+            "AlbumName": "Brothers"
+            "CoverArtFilename": "4151255.jpg"
+            "Popularity": 1229400698
+            "IsLowBitrateAvailable": true
+            "IsVerified": false
+            "Flags": 2
+            "url": "http://grooveshark.com/s/Next+Girl/2Qgvt9?src=3"
+        ]
+
+      searchCallback()
+      return
+      ###
+
+      gs_noauth.request 'getSongSearchResults',
+        query: @data.creator + ' ' + @data.title
+        country: 'USA'
+        limit: 5
+      , (err, status, gs_body) =>
+        searchCallback()
+
+        console.log gs_body
+
+        if err? and err.length > 0
+          @ack err: err
+          console.log err
+          return
+        
+        @ack gs_body
+
+        ###
+        if gs_body.songs.length is 0
+          @ack
+            songs: []
+          return
+
+        async.forEach [gs_body.songs[0]], (song, cb) =>
+          urlQueue.push (urlCallback) =>
+            gs_noauth.request 'getSongURLFromSongID',
+              songID: song.SongID
+            , (err, status, gs_body) =>
+              urlCallback()
+              if err
+                cb err
+                return
+
+              song.url = gs_body.url
+              cb null
+        , (err) =>
+          if err? and err.length > 0
+            @ack err: err
+            return
+          @ack gs_body
+        ###
 
 
   @get '/playlists', -> requiresLogin @request, @response, =>
