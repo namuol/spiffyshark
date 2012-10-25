@@ -182,7 +182,6 @@ zappa.run config.port, ->
         @send gs_body
 
   @post '/login', ->
-    console.log 'AKSDGKf hkjhasl gkhlkgj hsd'
     client = new GroovesharkClient config.grooveshark_key, config.grooveshark_secret
     client.authenticate @body.username, @body.password, (err, status, body) =>
       return if handle_errors @request, @response, err, status
@@ -287,8 +286,6 @@ zappa.run config.port, ->
               id: id
             , 200
   @put '/save_playlist/:id', ->
-    console.log 'WAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAT'
-
     if @request.session.user
       s3Path = '/'+@request.session.user.name+'/'+@params.id
     else
@@ -300,9 +297,6 @@ zappa.run config.port, ->
       'Content-Length': buffer.length
       'Content-Type': 'application/json'
     , (err, res) =>
-      console.log 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
-      console.log res.statusCode
-      console.log 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
 
       if res.statusCode is 200
         @send
@@ -316,7 +310,6 @@ zappa.run config.port, ->
         , 500
 
   @get '/playlist/:id', ->
-    console.log 'WATFFFFFFFFFFFFFFFFFFFFFFF'
     if @request.session.user
       s3Path = '/'+@request.session.user.name+'/'+@params.id
     else
