@@ -92,18 +92,16 @@ html ->
                         , 'Log Out'
 
   div id:'content', class:'container', ->
-    if @errors.length > 0
-      div class:'row-fluid', ->
-        div class:'errors_list span6', ->
-          for err in @errors
-            div class:'alert alert-error fade in', 'data-debug-info':err.debug_info, ->
-              button type:'button', class:'close', 'data-dismiss':'alert', '×'
-              strong 'error: '
-              text err.msg
+    div class:'row-fluid', ->
+      div id:'msgs', class:'errors_list span6'
+      if @errors.length > 0
+        for err in @errors
+          div class:'alert alert-error fade in', 'data-debug-info':err.debug_info, ->
+            button type:'button', class:'close', 'data-dismiss':'alert', '×'
+            strong 'error: '
+            text err.msg
 
     div class:'content', id:'main', ->
-      div class:'row-fluid', ->
-        div id:'msgs', class:'errors_list span6'
 
       div class:'row', ->
         div class:'span6', ->

@@ -40,7 +40,9 @@ zappa.run config.port, ->
             msg: err[0].message
           , 500
         else
-          res.send err:err, status
+          res.send err:
+            msg:err.error
+          , status
         return true
     else if req.accepts 'html'
       if err
@@ -59,7 +61,8 @@ zappa.run config.port, ->
     if req.session.user
       next()
     else if req.accepts 'json'
-      res.json 403, err:'You must be logged in to perform that operation.'
+      res.json 403, err:
+        msg: 'You must be logged in to perform that operation.'
     else if req.accepts 'html'
       req.session.errors.push
         msg: 'You must be logged in to perform that operation.'
@@ -121,35 +124,17 @@ zappa.run config.port, ->
 
         @redirect gs_body.url
 
+  @get '/gs_album/:id', ->
+    @redirect "http://grooveshark.com/album/~/#{@params.id}"
+
+  @get '/gs_artist/:id', ->
+    @redirect "http://grooveshark.com/artist/~/#{@params.id}"
+
   @on 'song': ->
-    console.log 'SONG'
     searchQueue.push (searchCallback) =>
-      console.log 'TASK'
       if @socket.disconnected
-        console.log 'DISCONNECTED'
         searchCallback()
         return
-
-      ###
-      @ack
-        "songs": [
-            "SongID": 25279548
-            "SongName": "Next Girl"
-            "ArtistID": 3705
-            "ArtistName": "The Black Keys"
-            "AlbumID": 4151255
-            "AlbumName": "Brothers"
-            "CoverArtFilename": "4151255.jpg"
-            "Popularity": 1229400698
-            "IsLowBitrateAvailable": true
-            "IsVerified": false
-            "Flags": 2
-            "url": "http://grooveshark.com/s/Next+Girl/2Qgvt9?src=3"
-        ]
-
-      searchCallback()
-      return
-      ###
 
       gs_noauth.request 'getSongSearchResults',
         query: @data.creator + ' ' + @data.title
@@ -158,39 +143,15 @@ zappa.run config.port, ->
       , (err, status, gs_body) =>
         searchCallback()
 
-        console.log gs_body
-
         if err? and err.length > 0
           @ack err: err
-          console.log err
           return
+
+        if gs_body.songs.length > 0
+          gs_body.songs[0].selected = true
         
         @ack gs_body
 
-        ###
-        if gs_body.songs.length is 0
-          @ack
-            songs: []
-          return
-
-        async.forEach [gs_body.songs[0]], (song, cb) =>
-          urlQueue.push (urlCallback) =>
-            gs_noauth.request 'getSongURLFromSongID',
-              songID: song.SongID
-            , (err, status, gs_body) =>
-              urlCallback()
-              if err
-                cb err
-                return
-
-              song.url = gs_body.url
-              cb null
-        , (err) =>
-          if err? and err.length > 0
-            @ack err: err
-            return
-          @ack gs_body
-        ###
 
 
   @get '/playlists', -> requiresLogin @request, @response, =>
@@ -198,7 +159,7 @@ zappa.run config.port, ->
     client.gs.request 'getUserPlaylists', {}, (err, status, gs_body) =>
       return if handle_errors @request, @response, err, status
       parse.getUser @request.session.user.pid, (err, res, body, success) =>
-        return if handle_errors @request, @response, body, res.status
+        return if handle_errors @request, @response, body, res.statusCode
         @send
           gs: gs_body
           xspf:
@@ -209,25 +170,19 @@ zappa.run config.port, ->
       client = getClient(@request).gs
     else
       client = gs_noauth
-    console.log @body
     client.request 'createPlaylist',
       name: @body.title
       songIDs: @body.tracks
     , (err, status, gs_body) =>
       return if handle_errors @request, @response, err, status
-      console.log err
-      console.log status
-      console.log gs_body
       gs_noauth.request 'getPlaylistURLFromPlaylistID',
         playlistID: gs_body.playlistID
       , (err, status, gs_body) =>
-        console.log err
-        console.log status
-        console.log gs_body
         return cb(err) if err
         @send gs_body
 
   @post '/login', ->
+    console.log 'AKSDGKf hkjhasl gkhlkgj hsd'
     client = new GroovesharkClient config.grooveshark_key, config.grooveshark_secret
     client.authenticate @body.username, @body.password, (err, status, body) =>
       return if handle_errors @request, @response, err, status
@@ -247,7 +202,7 @@ zappa.run config.port, ->
         parse.getUsers
           where: username: @body.username
         , (err, res, body, success) =>
-          return if handle_errors @request, @response, err, res.status
+          return if handle_errors @request, @response, err, res.statusCode
 
           if body.length is 0
             parse.createUser
@@ -255,13 +210,14 @@ zappa.run config.port, ->
               password: config.parse_user_password
               uploaded_files: []
             , (err, res, body, success) =>
-              return if handle_errors @request, @response, body, res.status
-              @request.session.user.ptoken = body.sessionToken
+              if not handle_errors @request, @response, body, res.statusCode
+                @request.session.user.ptoken = body.sessionToken
+                @request.session.user.pid = body.objectId
               @redirect @body.redirect or '/'
           else
             parse.loginUser @body.username, config.parse_user_password
             , (err, res, body, success) =>
-              if not handle_errors @request, @response, body, res.status
+              if not handle_errors @request, @response, body, res.statusCode
                 @request.session.user.ptoken = body.sessionToken
                 @request.session.user.pid = body.objectId
               @redirect @body.redirect or '/'
@@ -277,10 +233,10 @@ zappa.run config.port, ->
         @request.session.user = null
         @redirect @body.redirect or '/'
 
-  @post '/upload_playlist', ->
+  @post '/playlist', ->
     file = @request.files.file
 
-    fs.readFile file.path, 'utf-8', (err, data) =>
+    fs.readFile file.path, 'utf8', (err, data) =>
       return if handle_errors @request, @response, err, 500
 
       try
@@ -293,36 +249,84 @@ zappa.run config.port, ->
 
       headers =
         'x-amz-acl': 'public-read'
-        'Content-Type': 'application/xspf+xml'
+        'Content-Type': 'application/json'
+      id = shortid.generate()
       if @request.session.user
-        s3Path = '/'+@request.session.user.name+'/'+shortid.generate()+'/'+file.name
+        s3Path = '/'+@request.session.user.name+'/'+id
       else
-        s3Path = '/!/'+shortid.generate()
+        s3Path = '/!/'+id
         expires = new Date
         expires.setHours expires.getHours() + 24
         headers.Expires = expires
 
       s3url = s3.url(s3Path)
 
-      req = s3.putFile file.path, s3Path, headers, (err, res) =>
-        if @request.session.user
-          return if handle_errors @request, @response, err, res.statusCode
-          parse.sessionToken = @request.session.user.ptoken
-          parse.updateUser @request.session.user.pid,
-            uploaded_files:
-              __op: 'Add'
-              objects: [
-                title: jspf.playlist.title
-                creator: jspf.playlist.creator
-                track_count: jspf.playlist.track.length
-                url: s3url
-              ]
-          , (err, res, body, success) =>
-            return if handle_errors @request, @response, body, res.statusCode
+      fs.writeFile file.path, JSON.stringify(jspf), 'utf8', (err) =>
+        return if handle_errors @request, @response, err, 500
+
+        req = s3.putFile file.path, s3Path, headers, (err, res) =>
+          if @request.session.user
+            return if handle_errors @request, @response, err, res.statusCode
+            parse.sessionToken = @request.session.user.ptoken
+            parse.updateUser @request.session.user.pid,
+              uploaded_files:
+                __op: 'Add'
+                objects: [
+                  title: jspf.playlist.title
+                  creator: jspf.playlist.creator
+                  track_count: jspf.playlist.track.length
+                  id: id
+                ]
+            , (err, res, body, success) =>
+              return if handle_errors @request, @response, body, res.statusCode
+              @send
+                id: id
+              , 200
+          else
             @send
-              url: s3url
+              id: id
             , 200
-        else
-          @send
-            url: s3url
-          , 200
+  @put '/save_playlist/:id', ->
+    console.log 'WAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAT'
+
+    if @request.session.user
+      s3Path = '/'+@request.session.user.name+'/'+@params.id
+    else
+      s3Path = '/!/'+@params.id
+
+    json = JSON.stringify @body
+    buffer = new Buffer json
+    req = s3.putBuffer buffer, s3Path,
+      'Content-Length': buffer.length
+      'Content-Type': 'application/json'
+    , (err, res) =>
+      console.log 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
+      console.log res.statusCode
+      console.log 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
+
+      if res.statusCode is 200
+        @send
+          okay: true
+        , 200
+      else
+        @send
+          okay: false
+          err:
+            msg: 'Unexpected problem saving your playlist!'
+        , 500
+
+  @get '/playlist/:id', ->
+    console.log 'WATFFFFFFFFFFFFFFFFFFFFFFF'
+    if @request.session.user
+      s3Path = '/'+@request.session.user.name+'/'+@params.id
+    else
+      s3Path = '/!/'+@params.id
+
+    buffer = ''
+    req = s3.getFile s3Path, (err, res) =>
+      res.setEncoding 'utf8'
+      res.on 'data', (chunk) -> buffer += chunk
+      res.on 'end', =>
+        for own k,v of res.headers
+          @response.set k, v
+        @send buffer

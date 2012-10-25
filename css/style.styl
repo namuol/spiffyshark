@@ -50,6 +50,21 @@ body
 .playlists_list li
   padding 5px
 
+#song_modal .modal-body form
+  margin 0
+
+#song_modal form.form-horizontal .control-label
+  width 50px
+#song_modal form.form-horizontal .control-group .controls
+  margin-left 60px
+
+.modal_search_results ul
+  margin 0
+
+.modal_search_results ul li:nth-child(odd)
+  margin 0
+  background #eee
+
 .playlists_list li:nth-child(odd)
   background #eee
 
@@ -57,16 +72,75 @@ body
   display none
 
 .uploaded_playlist tbody tr
-  height 39px
+  height 41px
   font-size 12px
-  cursor pointer
 
-.uploaded_playlist tbody tr:hover td
-  background #fee !important
+//.uploaded_playlist tbody tr:hover td
+//  background #fee !important
 
-.uploaded_playlist tbody tr:active td
-  background #fcc !important
+//.uploaded_playlist tbody tr:active td
+//  background #fcc !important
+
+td.button
+  width 44px
+/*
+  background transparent !important
+  border 0
+
+td.button button
+  visibility hidden 
+
+.uploaded_playlist tbody tr:hover > td.button button
+  visibility visible
+*/
 
 .uploaded_playlist tr td
   vertical-align middle
   padding 0 5px
+
+.track_title, .track_title a
+  color #5F6B9C !important
+  font-size 14px
+  font-weight bold
+  text-overflow ellipsis
+
+.track_info
+  font-size 12px
+  white-space nowrap
+  overflow hidden
+  max-height 41px
+  text-overflow ellipsis
+
+.track_artist_album, .track_artist_album a
+  color #888 !important
+  text-overflow ellipsis
+
+.album_art
+  float left
+  max-height 41px
+  margin-right 3px
+
+.form-horizontal .control-group
+  margin-bottom 5px
+
+tr.no_songs_found, tr.no_songs_found td
+  background #fcc !important
+
+td.gs
+  width 400px
+
+button.select-song
+  padding 0
+  width 38px
+  height 38px
+  margin 1px
+  float left
+
+button.select-song i
+  visibility hidden
+
+button.select-song.active i
+  visibility visible
+
+button.editTrack
+  height 38px
