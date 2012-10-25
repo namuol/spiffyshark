@@ -21,6 +21,8 @@ div class:'content', id:'playlist', ->
 div id:'song_modal', class:'modal hide', ->
 
 coffeescript ->
+
+
   window.scripts.push ->
     window.gs_songs_rel = 'http://spiffyshark.com/app/gs_songs'
 
@@ -83,26 +85,26 @@ coffeescript ->
           ++idx
 
     playlist_template = coffeecup.compile ->
-      div id:'playlist_top', 'data-spy':'affix', 'data-offset-top':'100', class:'row', ->
-        button id:'search_songs', class:'btn btn-inverse btn-large', ->
-          strong 'Search'
-        button id:'save_playlist', class:'btn btn-inverse btn-large', ->
-          strong 'Save'
-        button id:'generate_playlist', class:'btn btn-inverse btn-large', ->
-          strong 'Export to Grooveshark!'
-        br ''
-        strong id:'disconnected_msg', 'Uh oh! Connection lost. Try refreshing the page.'
-      legend "#{@title} by #{@creator}"
+      div id:'playlist_top', class:'container', 'data-spy':'affix', ->
+        div class:'row',->
+          button id:'search_songs', class:'btn btn-inverse btn-large', ->
+            strong 'Search'
+          button id:'save_playlist', class:'btn btn-inverse btn-large', 'data-loading-text':'Saving', 'data-saved-text':'Saved', ->
+            strong 'Save'
+          button id:'generate_playlist', class:'btn btn-inverse btn-large', ->
+            strong 'Export to Grooveshark!'
+          br ''
+          strong id:'disconnected_msg', 'Uh oh! Connection lost. Try refreshing the page.'
 
-
-      table class:'uploaded_playlist table table-condensed table-striped', ->
-        thead ->
-          tr ->
-            th ''
-            #th ''
-            th 'Grooveshark Track'
-            th 'Playlist Track'
-        tbody ''
+      div class:'row', ->
+        legend "#{@title} by #{@creator}"
+        table class:'uploaded_playlist table table-condensed table-striped', ->
+          thead ->
+            tr ->
+              th ''
+              th 'Playlist Track (Search Terms)'
+              th 'Grooveshark Track (Search Results)'
+          tbody ''
 
     playlist_row = ->
       @track.extension = @track.extension or {}
@@ -117,11 +119,18 @@ coffeescript ->
         row_class = ''
 
       tr class:row_class, 'data-track-index':@index, ->
+
         td class:'button', ->
           button class:'btn editTrack', -> i class:'icon-pencil'
 
-        #td class:'button', ->
-        #  button class:'btn getSong', -> i class:'icon-search'
+        td class:'playlist', ->
+          div class:'track_info', ->
+            div class:'track_title', ->
+              text @track.title
+            div class:'track_artist_album', ->
+              text @track.creator
+              if @track.album
+                text " • #{@track.album}"
 
         td class:'gs', ->
           div class:'track_info',  ->
@@ -140,15 +149,6 @@ coffeescript ->
               text ' • '
               a href:"/gs_album/#{song.AlbumID}", target:'_blank', ->
                 text song.AlbumName
-
-        td class:'playlist', ->
-          div class:'track_info', ->
-            div class:'track_title', ->
-              text @track.title
-            div class:'track_artist_album', ->
-              text @track.creator
-              if @track.album
-                text " • #{@track.album}"
 
     playlist_row_template = coffeecup.compile playlist_row
 
@@ -177,6 +177,28 @@ coffeescript ->
           strong 'Warning: '
           text err.msg
     $ ->
+
+
+      $.fn.button.defaults.loadingText = ->
+        '<i class="icon-refresh animooted"></i> loading...'
+      
+      playlistDirtied = =>
+        change = window.lastChange = new Date
+        window.playlistDirty = true
+        $('#save_playlist').button 'reset'
+        setTimeout ->
+          if lastChange - change is 0
+            $('#save_playlist').click()
+        , 5000
+
+      playlistSaved = =>
+        window.playlistDirty = false
+        $('#save_playlist').button 'saved'
+        setTimeout ->
+          $('#save_playlist').attr 'disabled', 'disabled'
+        , 10
+      
+
       window.playlist_jspf = {}
       playlist_id = null
 
@@ -193,6 +215,22 @@ coffeescript ->
         connected = false
 
       app = new Sammy ->
+        window.playlistDirty = false
+        window.lastChange = new Date
+
+        window.onbeforeunload = (e) ->
+          if window.playlistDirty
+            return e.returnValue = 'Your playlist has unsaved changes!'
+          return null
+        
+        @before {}, ->
+          if window.playlistDirty
+            if not confirm 'Your playlist has unsaved changes! Are you sure you want to leave?'
+              return false
+            else
+              window.playlistDirty = false
+          return
+
         $('#content').ajaxError (e, xhr, settings, thrown) =>
           try
             resp = $.parseJSON xhr.responseText
@@ -232,6 +270,7 @@ coffeescript ->
               cb null if cb?
               return
             track.extension[gs_songs_rel] = data.songs
+            playlistDirtied()
             newRow = playlist_row_template index:i, track:track
 
             $(el).replaceWith newRow
@@ -306,6 +345,7 @@ coffeescript ->
           $(window.selectedRow).replaceWith $(newRow)
           window.selectedRow = $("tr[data-track-index=#{i}]")[0]
           getSong window.selectedRow, null, true
+          playlistDirtied()
         
         $('#song_modal form').live 'submit', (e) ->
           e.preventDefault()
@@ -324,18 +364,21 @@ coffeescript ->
           track.extension[gs_songs_rel][gs_song_idx].selected = true
           $(window.selectedRow).replaceWith playlist_row_template index:i, track:track
           window.selectedRow = $("tr[data-track-index=#{i}]")[0]
+          playlistDirtied()
 
           return false
         
         $('#save_playlist').live 'click', ->
+          $('#save_playlist').button 'loading'
           $.ajax
             type: 'PUT'
             cache: false
             url:'/save_playlist/' + playlist_id
             data: playlist_jspf
-          .success (data) =>
-            console.log data
-            alert 'Saved!'
+          .complete =>
+            playlistSaved()
+          .error =>
+            playlistDirtied()
 
         @get '#/', ->
           $('.nav .active').removeClass 'active'
@@ -385,6 +428,11 @@ coffeescript ->
             console.log playlist_jspf
 
             $('#playlist').html playlist_template window.playlist_jspf.playlist
+            $('#playlist_top').affix()
+
+            # Initial state is not dirty.
+            playlistSaved()
+
             i=0
             for track in window.playlist_jspf.playlist.track
               $('#playlist .uploaded_playlist tbody').append playlist_row_template {track:track, index:i}
