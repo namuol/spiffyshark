@@ -85,17 +85,15 @@ coffeescript ->
     playlist_template = coffeecup.compile ->
       div id:'playlist_top', 'data-spy':'affix', 'data-offset-top':'100', class:'row', ->
         button id:'search_songs', class:'btn btn-inverse btn-large', ->
-          strong 'Search For Songs on Grooveshark'
-        button style:'display:none', id:'stop_search_songs', class:'btn btn-inverse btn-large', ->
-          i class:'icon-refresh icon-white animooted'
-          strong ' Stop Searches'
-        button style:'display:none', id:'generate_playlist', class:'btn btn-inverse btn-large', ->
-          strong 'I\'m all done; Generate my Grooveshark Playlist!'
+          strong 'Search'
+        button id:'save_playlist', class:'btn btn-inverse btn-large', ->
+          strong 'Save'
+        button id:'generate_playlist', class:'btn btn-inverse btn-large', ->
+          strong 'Export to Grooveshark!'
         br ''
         strong id:'disconnected_msg', 'Uh oh! Connection lost. Try refreshing the page.'
       legend "#{@title} by #{@creator}"
 
-      button id:'save_playlist', class:'btn btn-inverse', 'Save your Playlist'
 
       table class:'uploaded_playlist table table-condensed table-striped', ->
         thead ->
@@ -180,7 +178,6 @@ coffeescript ->
           text err.msg
     $ ->
       window.playlist_jspf = {}
-      window.gs_playlist = {}
       playlist_id = null
 
       connected = false
@@ -189,11 +186,9 @@ coffeescript ->
 
       s.on 'connect', ->
         $('#disconnected_msg').hide()
-        $('#search_songs').show()
         connected = true
 
       s.on 'disconnect', ->
-        $('#search_songs').hide()
         $('#disconnected_msg').show()
         connected = false
 
@@ -251,8 +246,6 @@ coffeescript ->
 
         $('#search_songs').live 'click', (e) ->
           window.searches_break = false
-          $(@).hide()
-          $('#stop_search_songs').show()
           async.forEachLimit $('.uploaded_playlist tbody tr'), 2, (el, cb) =>
             if window.searches_break
               cb 'break'
@@ -264,22 +257,24 @@ coffeescript ->
 
             getSong el, cb
           , (err) ->
-            $('#stop_search_songs').hide()
-            if window.searches_break
-              $('#search_songs').show()
-            else
-              $('#search_songs').hide()
-              $('#generate_playlist').show()
 
         $('#stop_search_songs').live 'click', (e) ->
           window.searches_break = true
-          $('#stop_search_songs').hide()
-          $('#search_songs').show()
 
         $('#generate_playlist').live 'click', (e) ->
+          gs_playlist =
+            title: playlist_jspf.playlist.title
+            tracks: []
+          for track in playlist_jspf.playlist.track
+            ext = track.extension[gs_songs_rel]
+            if ext? and ext.length? and ext.length > 0
+              for song in ext
+                if song.selected
+                  gs_playlist.tracks.push song.SongID
+                  break
           $.ajax
             url:'/grooveshark_playlist'
-            data: window.gs_playlist
+            data: gs_playlist
             type: 'POST'
           .success (data) =>
             # Download the playlist we just uploaded. LOL
@@ -387,28 +382,13 @@ coffeescript ->
               when 'application/json'
                 window.playlist_jspf = data
             expires = xhr.getResponseHeader 'Expires'
-            gs_playlist.title = playlist_jspf.playlist.title
-            gs_playlist.tracks = []
             console.log playlist_jspf
 
-            
-            #try
             $('#playlist').html playlist_template window.playlist_jspf.playlist
             i=0
             for track in window.playlist_jspf.playlist.track
               $('#playlist .uploaded_playlist tbody').append playlist_row_template {track:track, index:i}
               ++i
-
-            $('#playlist_top').affix()
-            ###
-            catch e
-              console.error e
-              $('#playlist').html ''
-              $('#msgs').prepend error_template errors: [
-                msg: '''Unexpected error parsing file.
-                Are you sure it is a <a href="http://xspf.org" target="_new">XSPF</a> playlist?'''
-              ]
-            ###
 
             if expires
               $('#msgs').prepend alert_template errors: [
