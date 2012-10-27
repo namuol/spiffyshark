@@ -58,6 +58,9 @@ body
 #song_modal form.form-horizontal .control-group .controls
   margin-left 60px
 
+ul.search_results
+  list-style none
+
 .modal_search_results ul
   margin 0
 
@@ -75,14 +78,24 @@ body
   height 41px
   font-size 12px
 
+.uploaded_playlist .buttons
+  padding 0
+  width 40px
+
+#playlist legend
+  margin-top 40px
+
 //.uploaded_playlist tbody tr:hover td
 //  background #fee !important
 
 //.uploaded_playlist tbody tr:active td
 //  background #fcc !important
 
-td.button
-  width 44px
+.dragHandle
+  text-align center !important
+
+.dragHandle:hover, .dragHandle:active
+  cursor ns-resize
 /*
   background transparent !important
   border 0
@@ -102,6 +115,7 @@ td.button button
   color #5F6B9C !important
   font-size 14px
   font-weight bold
+  overflow hidden
   text-overflow ellipsis
 
 .track_info
@@ -111,8 +125,12 @@ td.button button
   max-height 41px
   text-overflow ellipsis
 
+.track_artist_album
+  margin-right 53px
+
 .track_artist_album, .track_artist_album a
   color #888 !important
+  overflow hidden
   text-overflow ellipsis
 
 .album_art
@@ -123,7 +141,7 @@ td.button button
 .form-horizontal .control-group
   margin-bottom 5px
 
-tr.no_songs_found, tr.no_songs_found td
+.no_songs_found, .no_songs_found > *
   background #fcc !important
 
 button.select-song
@@ -144,4 +162,35 @@ button.editTrack
   width 38px
   height 38px
   margin 1px
+
+.score
+  float right
+  margin-top -29px
+  height 20px
+  color #ccc
+  font-weight bold
+  font-size 24px
+
+.score i
+  opacity 0.25
+  visibility hidden
+.score i.verified
+  visibility visible
+
+.grooveshark_playlist_link
+  font-size 18px
+
+#log-in input[type=text]:focus, #log-in input[type=password]:focus
+  min-width 154px
+
+.playlist, .gs
+  overflow hidden
+  max-width 0px
+
+.ui-sortable-helper
+  background white
+  border-bottom 1px solid #ddd
+
+.ui-sortable-helper .playlist, .ui-sortable-helper .gs
+  max-width none
 

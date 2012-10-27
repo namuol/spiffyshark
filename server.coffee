@@ -14,6 +14,9 @@ async = require 'async'
 {exec} = require 'child_process'
 exec 'cake build'
 
+alnum = (s) ->
+  s.replace(/[^a-z0-9]/gi, '').toUpperCase()
+
 gs_noauth = new GroovesharkClient config.grooveshark_key, config.grooveshark_secret
 gs_noauth.authenticate config.gs_anon_acct, config.gs_anon_password, (err, status, body) =>
   if err
@@ -139,13 +142,47 @@ zappa.run config.port, ->
       gs_noauth.request 'getSongSearchResults',
         query: @data.creator + ' ' + @data.title
         country: 'USA'
-        limit: 5
+        limit: 15
       , (err, status, gs_body) =>
         searchCallback()
 
         if err? and err.length > 0
           @ack err: err
           return
+
+        for song in gs_body.songs
+          song.score = 0
+
+          if @data.title
+            if alnum(song.SongName) is alnum(@data.title)
+              song.score += 30
+            else if alnum(@data.title) in alnum(song.SongName)
+              song.score += 10
+
+          if @data.creator
+            if alnum(song.ArtistName) is alnum(@data.creator)
+              song.score += 40
+            else if alnum(@data.creator) in alnum(song.ArtistName)
+              song.score += 20
+
+          if @data.album
+            console.log song.AlbumName
+            if alnum(song.AlbumName) is alnum(@data.album)
+              song.score += 30
+            else if alnum(@data.album) in alnum(song.AlbumName)
+              song.score += 15
+
+          if song.CoverArtFilename? and song.CoverArtFilename.length > 0
+            song.score += 5
+
+        gs_body.songs.sort (a, b) ->
+          diff = b.score - a.score
+          if diff is 0
+            if a.IsVerified in [true, 'true']
+              return -1
+            else if b.IsVerified in [true, 'true']
+              return 1
+          return diff
 
         if gs_body.songs.length > 0
           gs_body.songs[0].selected = true

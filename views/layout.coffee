@@ -28,68 +28,43 @@ html ->
 
           div id:'account-nav-container', ->
             if not @user
-              ul id:'log-in-nav', class:'nav pull-right', ->
-                li class:'dropdown', ->
-                  a href:'#',
-                    role:'button',
-                    class:'dropdown-toggle',
-                    'data-toggle':'dropdown'
-                  , ->
-                    text 'Log In '
-                    b class:'caret', ''
-
-                  div class:'dropdown-menu', role:'menu', ->
-                    form id:'log-in', action:'login', method:'post', ->
-                      div class:'control-group', ->
-                        div class:'controls', ->
-                          div class:'input-prepend', ->
-                            span class:'add-on', ->
-                              i class:'icon-user'
-                            input
-                              id:'log-in-username'
-                              name:'username'
-                              type:'text'
-                              placeholder:'Grooveshark Username'
-
-                        div class:'controls', ->
-                          div class:'input-prepend', ->
-                            span class:'add-on', ->
-                              i class:'icon-lock'
-                            input
-                              id:'log-in-pass'
-                              name:'password'
-                              type:'password'
-                              placeholder:'Password'
-                        button class:'btn pull-right', 'Log In'
+              form
+                class:'navbar-form pull-right'
+                id:'log-in'
+                action:'login'
+                method:'post'
+              , ->
+                input
+                  id:'log-in-username'
+                  name:'username'
+                  placeholder:'Grooveshark Username'
+                  type:'text'
+                  class:'span2'
+                text '&nbsp;'
+                input
+                  id:'log-in-pass'
+                  name:'password'
+                  placeholder:'Password'
+                  type:'password'
+                  class:'span2'
+                text '&nbsp;'
+                button type:'submit', class:'btn btn-primary pull-right', 'Log In'
 
             if @user
-              ul id:'account-nav', class:'nav pull-right', ->
-                li class:'dropdown', ->
-                  a href:'#',
-                    role:'button',
-                    class:'dropdown-toggle',
-                    'data-toggle':'dropdown'
-                  , ->
-                    i class:'icon-white icon-user'
-                    span id:'username-display', " #{@user.name} "
-                    b class:'caret', ''
-
-                  ul class:'dropdown-menu', role:'menu', ->
-                    ###
-                    li -> a href:'#subscriptions', ->
-                      i class:'icon-shopping-cart'
-                      text ' Subscriptions'
-                    li -> a href:'#billing', ->
-                      i class:'icon-list-alt'
-                      text ' Billing History'
-                    ###
-                    li ->
-                      form action:'logout', method:'post', ->
-                        button
-                          id:'log-out'
-                          class:'btn pull-right'
-                          type:'submit'
-                        , 'Log Out'
+              form
+                action:'logout'
+                method:'post'
+                class:'navbar-form pull-right'
+              , ->
+                span class:'navbar-text', ->
+                  i class:'icon-white icon-user'
+                  span id:'username-display', " #{@user.name} "
+                  text '&nbsp;'
+                button
+                  id:'log-out'
+                  class:'btn btn-inverse pull-right'
+                  type:'submit'
+                , 'Log Out'
 
   div id:'content', class:'container', ->
     div class:'row-fluid', ->
@@ -134,7 +109,13 @@ html ->
     script src:'/async.js'
     script src:'/xspf_parser.js'
     script src:'/bootstrap/js/bootstrap.js'
-
+    script src:'/jquery-ui-1.9.1.custom.js'
+    
     coffeescript ->
+      Array::remove = (from, to) ->
+        rest = @slice((to or from) + 1 or @length)
+        @length = (if from < 0 then @length + from else from)
+        @push.apply this, rest
+
       for script in window.scripts
         script()

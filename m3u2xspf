@@ -1,0 +1,138 @@
+#! /usr/bin/env python2
+#
+# Convert an M3U playlist to XSPF.
+#
+# Usage: m3u2xspf < input.m3u > output.xspf
+#
+# Copyright (c) 2006, Matthias Friedrich <matt@mafr.de>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2, or (at your option)
+# any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+__revision__ = '$Id: m3u2xspf,v 1.4 2007/03/30 16:31:03 matthias Exp matthias $'
+__version__ = '0.2'
+
+import sys
+import urllib
+import urlparse
+import os.path
+import optparse
+import xml.sax.saxutils as saxutils 
+
+
+class XmlWriter(object):
+	def __init__(self, outStream, indentAmount='  '):
+		self._out = outStream
+		self._indentAmount = indentAmount
+		self._stack = [ ]
+
+	def prolog(self, encoding='UTF-8', version='1.0'):
+		pi = '<?xml version="%s" encoding="%s"?>' % (version, encoding)
+		self._out.write(pi + '\n')
+
+	def start(self, name, attrs={ }):
+		indent = self._getIndention()
+		self._stack.append(name)
+		self._out.write(indent + self._makeTag(name, attrs) + '\n')
+
+	def end(self):
+		name = self._stack.pop()
+		indent = self._getIndention()
+		self._out.write('%s</%s>\n' % (indent, name))
+
+	def elem(self, name, value, attrs={ }):
+		# delete attributes with an unset value
+		for (k, v) in attrs.items():
+			if v is None or v == '':
+				del attrs[k]
+
+		if value is None or value == '':
+			if len(attrs) == 0:
+				return
+			self._out.write(self._getIndention())
+			self._out.write(self._makeTag(name, attrs, True) + '\n')
+		else:
+			escValue = saxutils.escape(value or '')
+			self._out.write(self._getIndention())
+			self._out.write(self._makeTag(name, attrs))
+			self._out.write(escValue)
+			self._out.write('</%s>\n' % name)
+
+	def _getIndention(self):
+		return self._indentAmount * len(self._stack)
+
+	def _makeTag(self, name, attrs={ }, close=False):
+		ret = '<' + name
+
+		for (k, v) in attrs.iteritems():
+			if v is not None:
+				v = saxutils.quoteattr(str(v))
+				ret += ' %s=%s' % (k, v)
+
+		if close:
+			return ret + '/>'
+		else:
+			return ret + '>'
+
+
+def createAnnotation(url):
+	"""Get file name part, split off extension, rewrite underscores."""
+	path = urllib.unquote(urlparse.urlsplit(url)[2])
+	filename = os.path.splitext(os.path.basename(path))[0]
+	return filename.replace('_', ' ')
+
+#
+# MAIN
+#
+
+optParser = optparse.OptionParser(
+	usage='%prog [-ah] [file]',
+	version='%prog ' + __version__
+)
+
+optParser.add_option('-a', '--annotation',
+	action='store_true', dest='add_annotation',
+	default=False, help='create annotation elements based on the file name')
+
+(options, args) = optParser.parse_args()
+
+
+#
+# Write the playlist in XSPF format.
+#
+xml = XmlWriter(sys.stdout, indentAmount='  ')
+
+xml.prolog()
+xml.start('playlist', { 'xmlns': 'http://xspf.org/ns/0/', 'version': '1' })
+xml.start('trackList')
+
+for line in sys.stdin:
+	line = line.rstrip('\n')
+
+	if line.startswith('#') or len(line.strip()) == 0:
+		continue
+
+	if line.startswith('http://'):
+		url = line
+	else:
+		url = 'file://' + urllib.pathname2url(line)
+
+	xml.start('track')
+	xml.elem('location', url)
+
+	if options.add_annotation:
+		xml.elem('annotation', createAnnotation(url))
+
+	xml.end() # track
+
+xml.end() # trackList
+xml.end() # playlist
+
+# EOF
