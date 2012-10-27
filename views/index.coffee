@@ -49,8 +49,8 @@ div id:'song_modal', class:'modal hide', ->
 
 coffeescript ->
   window.scripts.push ->
-    window.gs_songs_rel = 'http://spiffyshark.com/app/gs_songs'
-    window.gs_playlist_rel = 'http://spiffyshark.com/app/gs_playlist'
+    window.gs_songs_rel = 's'
+    window.gs_playlist_rel = 'p'
 
     song_modal_template = coffeecup.compile ->
       div class:'modal-header', ->
@@ -206,7 +206,6 @@ coffeescript ->
           strong 'Warning: '
           text err.msg
     $ ->
-
       #=====================
       # Found here: http://stackoverflow.com/questions/1307705/jquery-ui-sortable-with-table-and-tr-width/1372954#1372954
       tableDragHelper = (e, tr) ->
@@ -422,6 +421,12 @@ coffeescript ->
         
         $('#save_playlist').live 'click', ->
           $('#save_playlist').button 'loading'
+          for track in jspf.playlist.track
+            arr=track.extension[gs_songs_rel] or []
+            if arr.length
+              for ext in arr
+                if ext.selected in [true, 'true']
+                  track.extension[gs_songs_rel] = [ext]
           setTimeout ->
             $.ajax
               type: 'PUT'
