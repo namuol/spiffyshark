@@ -14,57 +14,56 @@ html ->
 
   div class:'navbar navbar-inverse navbar-fixed-top', ->
     div class:'navbar-inner', ->
-      div class:'container-fluid', ->
-        a href:'#/', class:'brand', 'Spiffyshark'
-        div class:'', ->
-          ul class:'nav', ->
-            if @user
-              li -> a href:'#/playlists', ->
-                i class:'icon-white icon-list'
-                text ' Playlists'
-            li -> a href:'#/help', ->
-              i class:'icon-white icon-question-sign'
-              text ' Help'
+      a href:'#/', class:'brand', 'Spiffyshark'
 
-          div id:'account-nav-container', ->
-            if not @user
-              form
-                class:'navbar-form pull-right'
-                id:'log-in'
-                action:'login'
-                method:'post'
-              , ->
-                input
-                  id:'log-in-username'
-                  name:'username'
-                  placeholder:'Grooveshark Username'
-                  type:'text'
-                  class:'span2'
-                text '&nbsp;'
-                input
-                  id:'log-in-pass'
-                  name:'password'
-                  placeholder:'Password'
-                  type:'password'
-                  class:'span2'
-                text '&nbsp;'
-                button type:'submit', class:'btn btn-primary pull-right', 'Log In'
+      ul class:'nav', ->
+        if @user
+          li -> a href:'#/playlists', ->
+            i class:'icon-white icon-list'
+            text ' Playlists'
+        li -> a href:'#/help', ->
+          i class:'icon-white icon-question-sign'
+          text ' Help'
 
-            if @user
-              form
-                action:'logout'
-                method:'post'
-                class:'navbar-form pull-right'
-              , ->
-                span class:'navbar-text', ->
-                  i class:'icon-white icon-user'
-                  span id:'username-display', " #{@user.name} "
-                  text '&nbsp;'
-                button
-                  id:'log-out'
-                  class:'btn btn-inverse pull-right'
-                  type:'submit'
-                , 'Log Out'
+      div id:'account-nav-container', ->
+        if not @user
+          form
+            class:'navbar-form pull-right'
+            id:'log-in'
+            action:'login'
+            method:'post'
+          , ->
+            input
+              id:'log-in-username'
+              name:'username'
+              placeholder:'Grooveshark Username'
+              type:'text'
+              class:'span2'
+            text '&nbsp;'
+            input
+              id:'log-in-pass'
+              name:'password'
+              placeholder:'Password'
+              type:'password'
+              class:'span2'
+            text '&nbsp;'
+            button type:'submit', class:'btn btn-primary pull-right', 'Log In'
+
+        if @user
+          form
+            action:'logout'
+            method:'post'
+            class:'navbar-form pull-right'
+          , ->
+            span class:'navbar-text', ->
+              i class:'icon-white icon-user'
+              span id:'username-display', " #{@user.name} "
+              text '&nbsp;'
+            button
+              id:'log-out'
+              class:'btn btn-inverse pull-right'
+              type:'submit'
+            , 'Log Out'
 
   div id:'content', class:'container', ->
     div class:'row-fluid', ->

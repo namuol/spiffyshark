@@ -142,7 +142,7 @@ zappa.run config.port, ->
       gs_noauth.request 'getSongSearchResults',
         query: @data.creator + ' ' + @data.title
         country: 'USA'
-        limit: 15
+        limit: 30
       , (err, status, gs_body) =>
         searchCallback()
 
@@ -327,6 +327,10 @@ zappa.run config.port, ->
       s3Path = '/'+@request.session.user.name+'/'+@params.id
     else
       s3Path = '/!/'+@params.id
+
+    if @body.playlist
+      title = @body.playlist.title or ''
+      creator = @body.playlist.title or ''
 
     json = JSON.stringify @body
     buffer = new Buffer json

@@ -64,7 +64,44 @@ ul.search_results
 .modal_search_results ul
   margin 0
 
-.modal_search_results ul li:nth-child(odd)
+button.add_album_tracks
+  margin-top -35px
+  margin-right 5px
+  float right
+
+#album_modal_search_results > ul
+  margin 0
+
+.discogs_master_result
+  display none
+  padding 10px
+  padding-top 0
+  font-size 12px
+
+.discogs_master_result > .well
+  margin 0
+
+.show_discogs_master,
+.hide_discogs_master
+  box-sizing border-box
+  float left
+  width 40px
+  height 40px
+  padding-top 10px
+  padding-left 10px
+
+.discogs_thumb
+  float right
+  background #aaa
+  border 1px solid #aaa
+  width 90px
+  height 88px
+
+.hide_discogs_master
+  display none
+
+.search_results li:nth-child(odd),
+.modal_search_results li:nth-child(odd)
   margin 0
   background #eee
 
@@ -194,3 +231,12 @@ button.editTrack
 .ui-sortable-helper .playlist, .ui-sortable-helper .gs
   max-width none
 
+[contenteditable=true]
+  min-width 20px !important
+  display inline-block
+[contenteditable=true]:hover
+  background rgba(100,255,200, 0.2)
+[contenteditable=true]:focus
+  outline-style none
+  background rgba(100,255,200, 0.6)
+  padding 0 5px
