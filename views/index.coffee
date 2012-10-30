@@ -681,12 +681,12 @@ coffeescript ->
 
           $.getJSON('/playlists')
             .success (data) ->
+              $('#xspf_playlists_list').html ''
               for p in data.gs.playlists
-                if not $("#gs_playlists_list [data-playlist-id=#{p.PlaylistID}]").length > 0
-                  $('#gs_playlists_list').append gs_playlist_row_template p
+                $('#gs_playlists_list').append gs_playlist_row_template p
+              $('#xspf_playlists_list').html ''
               for p in data.xspf.playlists
-                if not $("#xspf_playlists_list [data-playlist-id=\"#{p.id}\"]").length > 0
-                  $('#xspf_playlists_list').append xspf_playlist_row_template p
+                $('#xspf_playlists_list').append xspf_playlist_row_template p
             .complete ->
               $('#playlists .animooted').remove()
 

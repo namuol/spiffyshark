@@ -37,7 +37,7 @@ zappa.run config.port, ->
 
   handle_errors = (req, res, err, status) ->
     if req.accepts 'json'
-      if err and (err.length or err.error)
+      if err and (err.length or err.error?)
         if err.length and err[0].message # gs error
           res.send err:
             msg: err[0].message
@@ -45,7 +45,7 @@ zappa.run config.port, ->
         else
           res.send err:
             msg:err.error
-          , status
+          , 500
         return true
     else if req.accepts 'html'
       if err
@@ -323,6 +323,12 @@ zappa.run config.port, ->
               id: id
             , 200
   @put '/save_playlist/:id', ->
+    ###
+    @response.send err:
+      msg:undefined
+    , 500
+    return
+    ###
     if @request.session.user
       s3Path = '/'+@request.session.user.name+'/'+@params.id
     else
@@ -339,16 +345,43 @@ zappa.run config.port, ->
       'Content-Type': 'application/json'
     , (err, res) =>
 
-      if res.statusCode is 200
-        @send
-          okay: true
-        , 200
-      else
+      if not (res.statusCode is 200)
         @send
           okay: false
           err:
             msg: 'Unexpected problem saving your playlist!'
         , 500
+      else if not (@request.session.user? and @body.playlist?)
+        @send
+          okay: true
+        , 200
+      else
+        title = @body.playlist.title
+        creator = @body.playlist.creator
+        found = false
+        parse.getUser @request.session.user.pid, (err, res, user, success) =>
+          return if handle_errors @request, @response, user, res.statusCode
+          for file in user.uploaded_files
+            if file.id is @params.id
+              file.title = title
+              file.creator = creator
+              found = true
+              console.log user.uploaded_files
+              parse.sessionToken = @request.session.user.ptoken
+              parse.updateUser @request.session.user.pid,
+                uploaded_files: user.uploaded_files
+              , (err, res, body, success) =>
+                console.log body
+                return if handle_errors @request, @response, body, res.statusCode
+                @send
+                  okay: true
+                , 200
+                return
+
+          if not found
+            @send
+              okay: true
+            , 200
 
   @get '/playlist/:id', ->
     if @request.session.user
