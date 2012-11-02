@@ -321,6 +321,11 @@ zappa.run config.port, ->
             @send
               id: id
             , 200
+
+  ### TODO
+  @put '/new_playlist', ->
+  ###
+
   @put '/save_playlist/:id', ->
     if @request.session.user
       s3Path = '/'+@request.session.user.name+'/'+@params.id

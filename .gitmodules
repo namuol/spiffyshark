@@ -4,6 +4,3 @@
 [submodule "node_modules/async"]
 	path = node_modules/async
 	url = git@github.com:namuol/async.git
-[submodule "node_modules/knox"]
-	path = node_modules/knox
-	url = git@github.com:namuol/knox.git
