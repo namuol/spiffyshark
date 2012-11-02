@@ -1,8 +1,21 @@
-div class:'content', id:'help', ->
+
+
+div class:'content container', id:'main', ->
+  div id:'new_playlist_options', ->
+    a id:'create', class:'row', href:'#/new_playlist', ->
+      legend 'Create'
+    hr ''
+    div id:'search', class:'row', ->
+      legend 'Search'
+    hr ''
+    div id:'import', class:'row', ->
+      legend 'Import'
+
+div class:'content container', id:'help', ->
   h2 'Help contents go here.'
 
 if @user
-  div class:'content', id:'playlists', ->
+  div class:'content container', id:'playlists', ->
     ###
     div class:'span5', ->
       legend ->
@@ -10,55 +23,79 @@ if @user
       i class:'icon-refresh animooted'
       ul id:'gs_playlists_list', class:'playlists_list'
     ###
-    div class:'span6', ->
-      legend 'Your XSPF Playlists'
-      i class:'icon-refresh animooted'
-      ul id:'xspf_playlists_list', class:'playlists_list'
+    legend 'Your Playlists'
+    i class:'icon-refresh icon-white animooted'
+    ul id:'xspf_playlists_list', class:'playlists_list'
 
 
-div class:'content', id:'playlist', ->
-  div id:'playlist_loading', ->
-    i class:'icon-refresh animooted'
-    text ' Loading Playlist...'
+div id:'playlist_loading', class:'content container', ->
+  i class:'icon-refresh icon-white animooted'
+  text ' Loading Playlist...'
 
-  div id:'playlist_view', ->
-    div id:'playlist_top', class:'', 'data-spy':'affix', ->
+div class:'content container', id:'playlist', ->
+  div class:'row', ->
+    legend ''
+
+  div id:'playlist_top_wrapper', ->
+    div id:'playlist_top', class:'row', ->
       div class:'btn-toolbar',->
         div id:'add_song_group', class:'btn-group', ->
-          button id:'add_song', class:'btn btn-large', ->
+          button id:'add_song', class:'btn btn-success btn-large', ->
             i class:'icon-plus icon-white'
-            text ' Add'
-          button class:'btn btn-large dropdown-toggle', 'data-toggle':'dropdown', ->
+            span ' Add'
+          button class:'btn btn-success btn-large dropdown-toggle', 'data-toggle':'dropdown', ->
             span class:'caret'
           ul class:'dropdown-menu', ->
             li ->
               #i class:'icon-search'
               a id:'add_album', tabindex:-1, href:'#', 'Album...'
 
-        button style:'display:none', id:'del_song', class:'btn btn-large', ->
+        button id:'del_song', class:'btn btn-danger btn-large', disabled:'disabled', ->
           i class:'icon-trash icon-white'
-          text 'Delete'
-        button id:'search_songs', class:'btn btn-large', ->
-          text 'Search'
+          span ' Delete'
+        div id:'search_songs_wrap', class:'btn-group', ->
+          button
+            id:'search_songs'
+            class:'btn btn-primary btn-large'
+          , ->
+            i class:'icon-search icon-white'
+            span ' Search'
+          button id:'search_dropdown_toggle', class:'btn btn-primary btn-large dropdown-toggle', 'data-toggle':'dropdown', ->
+            span class:'caret'
+          ul class:'dropdown-menu', ->
+            li ->
+              a id:'search_all_songs', tabindex:-1, href:'#', '...and Replace <b>all</b>'
+        div id:'cancel_search_songs_wrap', class:'btn-group', ->
+          button id:'cancel_search_songs', class:'btn btn-warning btn-large', ->
+            i class:'icon-remove icon-white'
+            span ' Cancel'
+          button class:'btn btn-warning btn-large dropdown-toggle', 'data-toggle':'dropdown', disabled:'disabled', ->
+            span class:'caret'
+          ul class:'dropdown-menu'
+
         text '&nbsp;'
-        button id:'save_playlist', class:'btn btn-large', 'data-loading-text':"<i class='icon-refresh icon-white animooted'></i> Saving", 'data-saved-text':'Saved', ->
-          text 'Save'
+        button
+          id:'save_playlist'
+          class:'btn btn-inverse btn-large'
+          'data-loading-text':"<i class='icon-refresh icon-white animooted'></i><span> Saving</span>"
+          'data-saved-text':"<i class='icon-ok icon-white'></i><span> Saved</span>"
+        , ->
+          i class:'icon-download-alt icon-white'
+          span ' Save'
         text '&nbsp;'
-        button id:'generate_playlist', class:'btn btn-large', ->
+        button id:'generate_playlist', class:'btn btn-inverse btn-large', ->
           text 'Export to Grooveshark!'
         br ''
         strong id:'disconnected_msg', 'Uh oh! Connection lost. Try refreshing the page.'
 
-    div class:'row', ->
-      legend ''
-      table class:'uploaded_playlist table table-condensed table-striped', ->
-        thead ->
-          tr ->
-            th ''
-            th 'Playlist Track (Search Terms)'
-            th 'Grooveshark Track (Search Results)'
-        tbody ''
-
+  div class:'row', ->
+    table class:'uploaded_playlist table table-condensed table-striped', ->
+      thead ->
+        tr ->
+          th ''
+          th 'Playlist Track (Search Terms)'
+          th 'Grooveshark Track (Search Results)'
+      tbody id:'playlist_items', ''
 
 div id:'album_search_modal', class:'modal hide', ->
   div class:'modal-header', ->
@@ -134,14 +171,16 @@ coffeescript ->
           h4 'Success!'
           p 'Click the link below to view your shiny new playlist!'
           div class:'well well-small', ->
-            a class:'grooveshark_playlist_link', href:@url, ->
+            a class:'grooveshark_playlist_link', href:@url, target:'_blank', ->
               text @url
 
     song_modal_search_results_template = coffeecup.compile ->
-      track_info = (song, index) ->
+      track_info = (song, index, chosen) ->
         btn_class = 'select-song btn'
         if song.selected
           btn_class += ' active'
+          if chosen
+            btn_class += ' chosen'
         button class:btn_class, 'data-toggle':'button', 'data-gs-song-index':''+index, ->
           i class:'icon-ok'
         div class:'track_info', 'data-gs-song-index':index, ->
@@ -177,7 +216,7 @@ coffeescript ->
         idx = 0
         for song in songs
           li ->
-            track_info song, idx
+            track_info song, idx, @chosen
           ++idx
 
     album_modal_search_results_template = coffeecup.compile ->
@@ -222,9 +261,11 @@ coffeescript ->
         div class:'discogs_thumb', ->
           img src:@thumb
         text 'Tracklist:'
-        ol class:'discogs_tracklist', ->
+        ul class:'discogs_tracklist', ->
           for track in @tracklist
             li ->
+              text track.position
+              text '. '
               text track.title
 
     playlist_row_template = coffeecup.compile ->
@@ -312,6 +353,53 @@ coffeescript ->
       text ' by '
       span id:'playlist_creator', contenteditable:'true', spellcheck:'false', @creator
     $ ->
+      $('#show_login_form').click ->
+        $(@).hide()
+        $('#log-in').show()
+        $('#log-in input').first().focus()
+
+      $.fn.transitionContent = (ms) ->
+        ms = ms or 250
+        wrapper = $("<div>")
+        trans = "width " + ms + "ms ease-out"
+        el = this
+        wrapper.css
+          "-webkit-transition": trans
+          "-moz-transition": trans
+          "-o-transition": trans
+          transition: trans
+          width: el.css("width")
+          height: el.css("height")
+          margin: el.css('margin')
+          padding: el.css('padding')
+          background: "#f0f" # For debug
+        el.css 'margin', '0'
+        el.css 'padding', '0'
+
+        el.wrap wrapper
+        wrapper = el.parent()
+        el.css
+          width: "100%"
+          height: "100%"
+
+        el.each ->
+          @addEventListener "DOMSubtreeModified", (e) ->
+            clone = undefined
+            w = undefined
+            h = undefined
+            clone = el.clone().css(
+              width: ""
+              height: ""
+            ).hide().appendTo("body")
+            w = clone.css("width")
+            h = clone.css("height")
+            clone.remove()
+            wrapper.css
+              width: w
+              height: h
+        el
+      #$('button').transitionContent(5000)
+
       animooted = '<i class="icon-refresh animooted"></i>'
 
       $.fn.button.defaults.loadingText = ->
@@ -332,10 +420,9 @@ coffeescript ->
         $('#save_playlist').button 'saved'
         setTimeout ->
           $('#save_playlist').attr 'disabled', 'disabled'
-        , 10
-      
+        , 20
 
-      window.jspf = {}
+      jspf = {}
       playlist_id = null
 
       connected = false
@@ -371,28 +458,27 @@ coffeescript ->
               return
 
             ext = track.extension[gs_songs_rel] or []
-            selected = undefined
 
-            for song in ext
-              if song.selected
-                selected = song
-                break
-            
-            if selected?
-              ext = track.extension[gs_songs_rel] = [selected]
+            if not track.chosen
+              playlistDirtied()
+              ext = []
             else
-              ext = track.extension[gs_songs_rel] = []
+              chosen = undefined
+              for song in ext
+                if song.selected? and song.selected
+                  chosen = song
+                  break
+              ext = [chosen]
 
             for song in data.songs
-              if selected?
-                if (''+song.SongID is ''+selected.SongID)
-                  selected.score = song.score
+              if chosen?
+                if (''+song.SongID is ''+chosen.SongID)
                   continue
-                song.selected = false
+                delete song.selected
+
               ext.push song
 
-            if not selected?
-              playlistDirtied()
+            track.extension[gs_songs_rel] = ext
 
             newRow = playlist_row_template index:i, track:track
 
@@ -403,9 +489,12 @@ coffeescript ->
 
             cb null if cb?
 
+        hasChosen = (idx) ->
+          jspf.playlist.track[idx].chosen is true
+
         hasSearched = (idx) ->
-          return false
-          jspf.playlist.track[idx].extension[gs_songs_rel]
+          ext = jspf.playlist.track[idx].extension[gs_songs_rel]
+          return ext?
 
         window.playlistDirty = false
         window.lastChange = new Date
@@ -415,13 +504,25 @@ coffeescript ->
             return e.returnValue = 'Your playlist has unsaved changes!'
           return null
         
+        previousLocation = null
+        confirmDialogShown = false
         @before {}, ->
+          $('.navbar .brand').show()
+
+          if confirmDialogShown
+            confirmDialogShown = false
+            return true
+
+          ret = true
           if window.playlistDirty
+            confirmDialogShown = true
             if not confirm 'Your playlist has unsaved changes! Are you sure you want to leave?'
-              return false
+              ret = false
+              app.setLocation previousLocation
             else
               window.playlistDirty = false
-          return
+          previousLocation = app.getLocation()
+          return ret
 
         $('#content').ajaxError (e, xhr, settings, thrown) =>
           try
@@ -446,6 +547,11 @@ coffeescript ->
             msg: msg
           ]
 
+        #$('#user_button').click (e) ->
+        #  e.preventDefault()
+        #  app.setLocation '#/playlists'
+        #  return false
+
         $('#playlist_title').live 'blur', ->
           old = jspf.playlist.title
           _new = $('#playlist_title').text()
@@ -464,11 +570,22 @@ coffeescript ->
           if e.which is 13
             $(@).blur()
 
-        $('#search_songs').live 'click', (e) ->
-          window.searches_break = false
-          async.forEachLimit $('.uploaded_playlist tbody tr'), 2, (el, cb) =>
+        searching = false
+        searches_break = false
 
-            if window.searches_break
+        $('#cancel_search_songs').live 'click', (e) ->
+          e.preventDefault()
+          searches_break = true
+          return false
+        $('#cancel_search_songs_wrap').hide()
+
+        $('#search_songs').live 'click', (e) ->
+          $('#cancel_search_songs_wrap').show()
+          $('#search_songs_wrap').hide()
+          searching = true
+          searches_break = false
+          async.forEachLimit $('.uploaded_playlist tbody tr'), 2, (el, cb) =>
+            if searches_break
               cb 'break'
               return
 
@@ -478,7 +595,10 @@ coffeescript ->
 
             i = $(el).index()
             getSong i, cb
-          , (err) ->
+          , (err) =>
+            $('#cancel_search_songs_wrap').hide()
+            $('#search_songs_wrap').show()
+            searching = false
 
         $('#add_song').live 'click', (e) ->
           track =
@@ -492,6 +612,8 @@ coffeescript ->
             index: idx
             
           $('#playlist .uploaded_playlist tr').last().find('button.editTrack').click()
+          $('#playlist_items').sortable 'refresh'
+          playlistDirtied()
 
         $('#add_album').live 'click', (e) ->
           $('#album_search_modal').modal()
@@ -560,12 +682,13 @@ coffeescript ->
               $('#playlist .uploaded_playlist').append playlist_row_template
                 track: track
                 index: idx
-              getSong idx, null
+              track.idx = idx
+              $('#playlist_items').sortable 'refresh'
+
+            async.forEachLimit res.data.tracklist, 2, (track, cb) =>
+              getSong track.idx, cb
             $('#album_search_modal').modal 'hide'
           return false
-
-        $('#stop_search_songs').live 'click', (e) ->
-          window.searches_break = true
 
         $('#generate_playlist').live 'click', (e) ->
           $('#generate_playlist').button 'loading'
@@ -585,8 +708,9 @@ coffeescript ->
             type: 'POST'
           .success (data) =>
             $('#generate_playlist').button 'reset'
+            url = data.url.replace('listen.', '')
             $(grooveshark_playlist_link_modal_template
-              url: data.url.replace('listen.', '')
+              url: url
             ).modal()
 
         $('button.getSong').live 'click', (e) ->
@@ -595,8 +719,8 @@ coffeescript ->
           return false
         
         $('#song_modal_search').live 'click', (e) ->
-          if not hasSearched $(window.selectedRow).index()
-            getSong $(window.selectedRow).index(), null, true
+          getSong $(window.selectedRow).index(), null, true
+          return false
 
         $('.uploaded_playlist button.editTrack').live 'click', ->
           window.selectedRow = $(@).parent().parent()[0]
@@ -605,18 +729,19 @@ coffeescript ->
           $('#song_modal').html song_modal_template song
           $('#song_modal .modal_search_results').html song_modal_search_results_template song
           $('#song_modal').modal()
-          if not hasSearched $(window.selectedRow).index()
-            getSong $(window.selectedRow).index(), null, true
+          #getSong $(window.selectedRow).index(), null, true
 
         $('#song_modal input').live 'change', ->
           i = $(selectedRow).index()
           song = jspf.playlist.track[i]
+          delete song.chosen
           attr_name = $(@).attr 'name'
           song[attr_name] = $(@).val()
           newRow = playlist_row_template
             track: song
             index: i
           $(window.selectedRow).replaceWith $(newRow)
+          $('#playlist_items').sortable 'refresh'
           window.selectedRow = $('.uploaded_playlist tbody tr')[i]
           getSong $(window.selectedRow).index(), null, true
           playlistDirtied()
@@ -627,16 +752,20 @@ coffeescript ->
 
         $('#song_modal button.select-song').live 'click', (e) ->
           e.preventDefault()
-          $('#song_modal button.select-song').removeClass 'active'
-          $(@).addClass 'active'
+          $('#song_modal button.select-song').removeClass('active').removeClass('chosen')
+          $(@).addClass('active').addClass('chosen')
 
           i = $(selectedRow).index()
           gs_song_idx = parseInt $(@).data 'gs-song-index'
           track = jspf.playlist.track[i]
           for song in track.extension[gs_songs_rel]
             delete song['selected']
+            delete song['chosen']
+          console.log track.extension[gs_songs_rel]
           track.extension[gs_songs_rel][gs_song_idx].selected = true
+          track.chosen = true
           $(window.selectedRow).replaceWith playlist_row_template index:i, track:track
+          $('#playlist_items').sortable 'refresh'
           window.selectedRow = $('.uploaded_playlist tbody tr')[i]
           playlistDirtied()
 
@@ -644,7 +773,8 @@ coffeescript ->
         
         $('#save_playlist').live 'click', ->
           $('#save_playlist').button 'loading'
-          for track in jspf.playlist.track
+          to_save = $.extend true, jspf, {}
+          for track in to_save.playlist.track
             arr=track.extension[gs_songs_rel] or []
             if arr.length
               for ext in arr
@@ -655,17 +785,41 @@ coffeescript ->
               type: 'PUT'
               cache: false
               url:'/save_playlist/' + playlist_id
-              data: jspf
+              data: to_save
             .complete =>
               playlistSaved()
-            .error =>
+            .error (xhr, err, thrown) =>
               playlistDirtied()
           , 200
+        
+        new_playlist =
+          playlist:
+            creator: 'Anonymous'
+            title: 'New Playlist'
+            info: 'http://spiffyshark.com'
+            track: []
+
+        @get '#/new_playlist', ->
+          $('.nav .active').removeClass 'active'
+          $('.nav [href="#/help"]').parent().addClass 'active'
+          $('.content').hide()
+          $('#playlist').show()
+          $('#save_playlist').button('reset').attr('disabled','disabled')
+          $('#playlist .uploaded_playlist').html ''
+          jspf = $.extend new_playlist, {}
+          jspf.playlist.creator = $('#username').val() or 'Anonymous'
+
+          playlist_loaded()
+
+          $('#save_playlist').button 'reset'
+          $('#save_playlist').attr 'disabled', 'disabled'
 
         @get '#/', ->
+          $('.navbar .brand').hide()
           $('.nav .active').removeClass 'active'
           $('.content').hide()
           $('#main').show()
+          $('#brand_row').show()
 
         @get '#/help', ->
           $('.nav .active').removeClass 'active'
@@ -690,17 +844,109 @@ coffeescript ->
             .complete ->
               $('#playlists .animooted').remove()
 
-        @get '#/playlist/:id', ->
-          playlist_id = @params.id
-          $('.nav .active').removeClass 'active'
-          $('.content').hide()
-          $('#playlist .uploaded_playlist').html ''
-          $('#playlist_view').hide()
-          $('#playlist_loading').show()
-          $('#playlist').show()
+        playlist_loaded = ->
+          console.log jspf
 
-          xhr = $.get('/playlist/'+@params.id).success (data) ->
+          $('#playlist legend').html playlist_legend_template jspf.playlist
+
+          # Initial state is not dirty.
+          #playlistSaved()
+
+          i=0
+          for track in jspf.playlist.track
+            $('#playlist .uploaded_playlist').append playlist_row_template
+              track:track
+              index:i
+            ++i
+
+          #=====================
+          # Found here: http://stackoverflow.com/questions/1307705/jquery-ui-sortable-with-table-and-tr-width/1372954#1372954
+          tableDragHelper = (e, tr) ->
+            $originals = tr.children()
+            $helper = tr.clone()
+            $helper.children().each (index) ->
+              # Set helper cell sizes to match the original sizes
+              $(@).width $originals.eq(index).width()
+              $(@).css
+                'max-width': $originals.eq(index).width()
+            $helper
+          #
+          #=====================
+          
+          row_deleted = false
+          old_pos = undefined
+          drag_item = undefined
+
+          $('table tbody').sortable
+            helper: tableDragHelper
+            start: (e, ui) ->
+              row_deleted = false
+              ui.helper.fadeTo 0, 0.5
+              $('#del_song').attr 'disabled', false
+              old_pos = ui.item.index()
+              drag_item = ui.item
+            stop: (e, ui) ->
+              #$('#del_song').hide()
+              $('#add_song_group').show()
+              $('#del_song').attr 'disabled', 'disabled'
+              $('#del_song').removeClass 'warning'
+            update: (e, ui) ->
+              return if row_deleted
+              new_pos = ui.item.index()
+              diff = -(old_pos-new_pos) / Math.abs old_pos-new_pos
+              i = old_pos
+              ###
+              while i != (new_pos + diff)
+                $(arr[i]).attr
+                  'data-track-index': i
+                .data 'track-index': i
+                i += diff
+              ###
+              jspf_item = jspf.playlist.track[old_pos]
+              jspf.playlist.track.remove old_pos
+              jspf.playlist.track.splice new_pos, 0, jspf_item
+
+              playlistDirtied()
+          .disableSelection()
+
+          $('#del_song').droppable
+            over: (e, ui) ->
+              $('#del_song').addClass 'warning'
+            out: (e, ui) ->
+              $('#del_song').removeClass 'warning'
+            drop: (e, ui) ->
+              row_deleted = true
+              jspf.playlist.track.remove old_pos
+              drag_item.remove()
+              playlistDirtied()
+            tolerance: 'pointer'
+
+
+        @get '#/playlist/:id', ->
+          if playlist_id is @params.id
+            $('.nav .active').removeClass 'active'
+            $('.content').hide()
+            $('#playlist').show()
             $('#playlist_loading').hide()
+            return
+          else
+            $('.nav .active').removeClass 'active'
+            $('.content').hide()
+            $('#playlist .uploaded_playlist').html ''
+            $('#playlist').hide()
+            $('#playlist_loading').show()
+
+          params_id = @params.id
+          xhr = $.get('/playlist/'+@params.id).success (data) ->
+            playlist_id = params_id
+
+            $('#playlist_loading').hide()
+            $('#playlist').show()
+
+            setTimeout ->
+              $('#playlist_top').affix
+                offset: $('#playlist_top').position()
+            , 10
 
             switch xhr.getResponseHeader 'Content-Type'
               when 'application/xspf+xml'
@@ -708,94 +954,12 @@ coffeescript ->
                   xspf_dom = XSPF.XMLfromString data
                 else
                   xspf_dom = data
-                window.jspf = XSPF.toJSPF xspf_dom
+                jspf = XSPF.toJSPF xspf_dom
               when 'application/json'
-                window.jspf = data
+                jspf = data
+
+            jspf.playlist.track = jspf.playlist.track or []
             expires = xhr.getResponseHeader 'Expires'
-
-            console.log jspf
-
-            $('#playlist legend').html playlist_legend_template jspf.playlist
-
-            # Initial state is not dirty.
-            playlistSaved()
-
-            i=0
-            for track in window.jspf.playlist.track
-              $('#playlist .uploaded_playlist').append playlist_row_template
-                track:track
-                index:i
-              ++i
-
-            #=====================
-            # Found here: http://stackoverflow.com/questions/1307705/jquery-ui-sortable-with-table-and-tr-width/1372954#1372954
-            tableDragHelper = (e, tr) ->
-              $originals = tr.children()
-              $helper = tr.clone()
-              $helper.children().each (index) ->
-                # Set helper cell sizes to match the original sizes
-                $(@).width $originals.eq(index).width()
-                $(@).css
-                  'max-width': $originals.eq(index).width()
-              $helper
-            #
-            #=====================
-            
-            row_deleted = false
-            old_pos = undefined
-            drag_item = undefined
-
-            $('table tbody').sortable
-              helper: tableDragHelper
-              start: (e, ui) ->
-                row_deleted = false
-                ui.helper.fadeTo 0, 0.5
-                $('#add_song_group').hide()
-                $('#del_song')
-                  .removeClass('btn-danger')
-                  .addClass('btn-warning')
-                  .show().fadeTo 0, 1
-                old_pos = ui.item.index()
-                drag_item = ui.item
-              stop: (e, ui) ->
-                $('#del_song').hide()
-                $('#add_song_group').show()
-              update: (e, ui) ->
-                return if row_deleted
-                new_pos = ui.item.index()
-                diff = -(old_pos-new_pos) / Math.abs old_pos-new_pos
-                i = old_pos
-                ###
-                while i != (new_pos + diff)
-                  $(arr[i]).attr
-                    'data-track-index': i
-                  .data 'track-index': i
-                  i += diff
-                ###
-                jspf_item = jspf.playlist.track[old_pos]
-                jspf.playlist.track.remove old_pos
-                jspf.playlist.track.splice new_pos, 0, jspf_item
-
-                playlistDirtied()
-            .disableSelection()
-
-            $('#del_song').droppable
-              over: (e, ui) ->
-                $('#del_song')
-                  .removeClass('btn-warning')
-                  .addClass('btn-danger')
-                  .show().fadeTo 0, 1
-              out: (e, ui) ->
-                $('#del_song')
-                  .removeClass('btn-danger')
-                  .addClass('btn-warning')
-                  .show().fadeTo 0, 1
-              drop: (e, ui) ->
-                row_deleted = true
-                jspf.playlist.track.remove old_pos
-                drag_item.remove()
-                playlistDirtied()
-              tolerance: 'pointer'
 
             if expires
               $('#msgs').prepend alert_template errors: [
@@ -809,10 +973,10 @@ coffeescript ->
                 """
               ]
 
-            $('#playlist_view').show()
+            playlist_loaded()
 
           .error (xhr, err, thrown) =>
-            $('#playlist_view').hide()
+            $('#playlist').hide()
             $('#playlist_loading').hide()
 
         @post '#/upload_playlist', ->

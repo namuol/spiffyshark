@@ -166,7 +166,6 @@ zappa.run config.port, ->
               song.score += 20
 
           if @data.album
-            console.log song.AlbumName
             if alnum(song.AlbumName) is alnum(@data.album)
               song.score += 30
             else if alnum(@data.album) in alnum(song.AlbumName)
@@ -323,12 +322,6 @@ zappa.run config.port, ->
               id: id
             , 200
   @put '/save_playlist/:id', ->
-    ###
-    @response.send err:
-      msg:undefined
-    , 500
-    return
-    ###
     if @request.session.user
       s3Path = '/'+@request.session.user.name+'/'+@params.id
     else
@@ -343,7 +336,7 @@ zappa.run config.port, ->
     req = s3.putBuffer buffer, s3Path,
       'Content-Length': buffer.length
       'Content-Type': 'application/json'
-    , (err, res) =>
+    , (err={message:'Unexpected Error'}, res={}) =>
 
       if not (res.statusCode is 200)
         @send
@@ -366,12 +359,10 @@ zappa.run config.port, ->
               file.title = title
               file.creator = creator
               found = true
-              console.log user.uploaded_files
               parse.sessionToken = @request.session.user.ptoken
               parse.updateUser @request.session.user.pid,
                 uploaded_files: user.uploaded_files
               , (err, res, body, success) =>
-                console.log body
                 return if handle_errors @request, @response, body, res.statusCode
                 @send
                   okay: true
@@ -391,9 +382,12 @@ zappa.run config.port, ->
 
     buffer = ''
     req = s3.getFile s3Path, (err, res) =>
+      console.log err
+      return if handle_errors @request, @response, err, 500
       res.setEncoding 'utf8'
       res.on 'data', (chunk) -> buffer += chunk
-      res.on 'end', =>
+      res.on 'end', (a, b, c) =>
+        console.log a
         for own k,v of res.headers
           @response.set k, v
         @send buffer
