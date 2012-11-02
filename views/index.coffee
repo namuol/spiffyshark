@@ -5,7 +5,7 @@ div class:'content container', id:'main', ->
     a id:'create', class:'row', href:'#/new_playlist', ->
       legend 'Create'
     hr ''
-    div id:'search', class:'row', ->
+    a id:'search', class:'row', href:'#/search', ->
       legend 'Search'
     hr ''
     div id:'import', class:'row', ->
@@ -686,6 +686,13 @@ coffeescript ->
           return false
 
         $('.add_album_tracks').live 'click', (e) ->
+          if jspf.playlist.track.length is 0
+            creator = $(@).parent().data 'artist'
+            title = $(@).parent().data 'album'
+            jspf.playlist.creator = creator
+            jspf.playlist.title = title
+            $('#playlist legend').html playlist_legend_template jspf.playlist
+
           $(@).button 'loading'
           $.getJSON $(@).parent().data('url') + '?callback=?'
           , (res, status, xhr) =>
@@ -825,59 +832,6 @@ coffeescript ->
             .error (xhr, err, thrown) =>
               playlistDirtied()
           , 200
-        
-        new_playlist =
-          playlist:
-            creator: 'Anonymous'
-            title: 'New Playlist'
-            info: 'http://spiffyshark.com'
-            track: []
-
-        @get '#/new_playlist', ->
-          playlist_id = null
-          $('.nav .active').removeClass 'active'
-          $('.nav [href="#/help"]').parent().addClass 'active'
-          $('.content').hide()
-          $('#playlist').show()
-          $('#save_playlist').button('reset').attr('disabled','disabled')
-          $('#playlist .uploaded_playlist').html ''
-          jspf = $.extend new_playlist, {}
-          jspf.playlist.creator = $('#username').val() or 'Anonymous'
-
-          playlist_loaded()
-
-          $('#save_playlist').button 'reset'
-          $('#save_playlist').attr 'disabled', 'disabled'
-
-        @get '#/', ->
-          $('.navbar .brand').hide()
-          $('.nav .active').removeClass 'active'
-          $('.content').hide()
-          $('#main').show()
-          $('#brand_row').show()
-
-        @get '#/help', ->
-          $('.nav .active').removeClass 'active'
-          $('.nav [href="#/help"]').parent().addClass 'active'
-          $('.content').hide()
-          $('#help').show()
-
-        @get '#/playlists', ->
-          $('.nav .active').removeClass 'active'
-          $('.nav [href="#/playlists"]').parent().addClass 'active'
-          $('.content').hide()
-          $('#playlists').show()
-
-          $.getJSON('/playlists')
-            .success (data) ->
-              $('#xspf_playlists_list').html ''
-              for p in data.gs.playlists
-                $('#gs_playlists_list').append gs_playlist_row_template p
-              $('#xspf_playlists_list').html ''
-              for p in data.xspf.playlists
-                $('#xspf_playlists_list').append xspf_playlist_row_template p
-            .complete ->
-              $('#playlists .animooted').remove()
 
         playlist_loaded = ->
           console.log jspf
@@ -955,6 +909,63 @@ coffeescript ->
               drag_item.remove()
               playlistDirtied()
             tolerance: 'pointer'
+
+        new_playlist =
+          playlist:
+            creator: 'Anonymous'
+            title: 'New Playlist'
+            info: 'http://spiffyshark.com'
+            track: []
+
+        @get '#/search', ->
+          $('#album_search_modal').modal()
+          @redirect '#/new_playlist'
+
+        @get '#/new_playlist', ->
+          playlist_id = null
+          $('.nav .active').removeClass 'active'
+          $('.nav [href="#/help"]').parent().addClass 'active'
+          $('.content').hide()
+          $('#playlist').show()
+          $('#save_playlist').button('reset').attr('disabled','disabled')
+          $('#playlist .uploaded_playlist').html ''
+          jspf = $.extend new_playlist, {}
+          jspf.playlist.creator = $('#username').val() or 'Anonymous'
+
+          playlist_loaded()
+
+          $('#save_playlist').button 'reset'
+          $('#save_playlist').attr 'disabled', 'disabled'
+
+        @get '#/', ->
+          $('.navbar .brand').hide()
+          $('.nav .active').removeClass 'active'
+          $('.content').hide()
+          $('#main').show()
+          $('#brand_row').show()
+
+        @get '#/help', ->
+          $('.nav .active').removeClass 'active'
+          $('.nav [href="#/help"]').parent().addClass 'active'
+          $('.content').hide()
+          $('#help').show()
+
+        @get '#/playlists', ->
+          $('.nav .active').removeClass 'active'
+          $('.nav [href="#/playlists"]').parent().addClass 'active'
+          $('.content').hide()
+          $('#playlists').show()
+
+          $.getJSON('/playlists')
+            .success (data) ->
+              $('#xspf_playlists_list').html ''
+              for p in data.gs.playlists
+                $('#gs_playlists_list').append gs_playlist_row_template p
+              $('#xspf_playlists_list').html ''
+              for p in data.xspf.playlists
+                $('#xspf_playlists_list').append xspf_playlist_row_template p
+            .complete ->
+              $('#playlists .animooted').remove()
 
 
         @get '#/playlist/:id', ->

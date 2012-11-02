@@ -373,9 +373,9 @@ zappa.run config.port, ->
               playlists:
                 __op: 'Add'
                 objects: [
-                  title: jspf.playlist.title
-                  creator: jspf.playlist.creator
-                  track_count: jspf.playlist.track.length
+                  title: title
+                  creator: creator
+                  track_count: @body.playlist.track.length
                   id: id
                 ]
             , (err, res, body, success) =>
