@@ -68,6 +68,15 @@ html ->
                   class:'btn btn-inverse'
                   type:'submit'
                 , 'Log Out'
+      div class:'container', ->
+        div class:'row', ->
+          div id:'msgs', class:'errors_list'
+          if @errors.length > 0
+            for err in @errors
+              div class:'alert alert-error fade in', 'data-debug-info':err.debug_info, ->
+                button type:'button', class:'close', 'data-dismiss':'alert', '×'
+                strong 'error: '
+                text err.msg
 
       div id:'brand_row', class:'row content', ->
         h1 id:'main_brand', ->
@@ -78,14 +87,6 @@ html ->
           text ' Playlists.'
 
     div id:'content', class:'container', ->
-      div class:'row', ->
-        div id:'msgs', class:'errors_list span6'
-        if @errors.length > 0
-          for err in @errors
-            div class:'alert alert-error fade in', 'data-debug-info':err.debug_info, ->
-              button type:'button', class:'close', 'data-dismiss':'alert', '×'
-              strong 'error: '
-              text err.msg
 
       text @body
 

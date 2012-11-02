@@ -199,7 +199,7 @@ zappa.run config.port, ->
         @send
           gs: gs_body
           xspf:
-            playlists: body.uploaded_files
+            playlists: body.playlists
 
   @post '/grooveshark_playlist', ->
     if @request.session.user
@@ -243,7 +243,7 @@ zappa.run config.port, ->
             parse.createUser
               username: @body.username
               password: config.parse_user_password
-              uploaded_files: []
+              playlists: []
             , (err, res, body, success) =>
               if not handle_errors @request, @response, body, res.statusCode
                 @request.session.user.ptoken = body.sessionToken
@@ -304,7 +304,7 @@ zappa.run config.port, ->
             return if handle_errors @request, @response, err, res.statusCode
             parse.sessionToken = @request.session.user.ptoken
             parse.updateUser @request.session.user.pid,
-              uploaded_files:
+              playlists:
                 __op: 'Add'
                 objects: [
                   title: jspf.playlist.title
@@ -322,28 +322,18 @@ zappa.run config.port, ->
               id: id
             , 200
 
-  ### TODO
-  @put '/new_playlist', ->
-  ###
-
-  @put '/save_playlist/:id', ->
-    if @request.session.user
-      s3Path = '/'+@request.session.user.name+'/'+@params.id
-    else
-      s3Path = '/!/'+@params.id
-
+  
+  saveFile = (buffer, s3Path, id) ->
     if @body.playlist
       title = @body.playlist.title or ''
       creator = @body.playlist.title or ''
 
-    json = JSON.stringify @body
-    buffer = new Buffer json
     req = s3.putBuffer buffer, s3Path,
       'Content-Length': buffer.length
       'Content-Type': 'application/json'
     , (err={message:'Unexpected Error'}, res={}) =>
 
-      if not (res.statusCode is 200)
+      if (res.statusCode >= 300) or (res.statusCode < 200)
         @send
           okay: false
           err:
@@ -352,6 +342,7 @@ zappa.run config.port, ->
       else if not (@request.session.user? and @body.playlist?)
         @send
           okay: true
+          id: id
         , 200
       else
         title = @body.playlist.title
@@ -359,25 +350,85 @@ zappa.run config.port, ->
         found = false
         parse.getUser @request.session.user.pid, (err, res, user, success) =>
           return if handle_errors @request, @response, user, res.statusCode
-          for file in user.uploaded_files
-            if file.id is @params.id
+          for file in user.playlists
+            if file.id is id
               file.title = title
               file.creator = creator
               found = true
               parse.sessionToken = @request.session.user.ptoken
               parse.updateUser @request.session.user.pid,
-                uploaded_files: user.uploaded_files
+                playlists: user.playlists
               , (err, res, body, success) =>
                 return if handle_errors @request, @response, body, res.statusCode
                 @send
                   okay: true
+                  id: id
                 , 200
                 return
 
           if not found
-            @send
-              okay: true
-            , 200
+            user.playlists.push
+            parse.sessionToken = @request.session.user.ptoken
+            parse.updateUser @request.session.user.pid,
+              playlists:
+                __op: 'Add'
+                objects: [
+                  title: jspf.playlist.title
+                  creator: jspf.playlist.creator
+                  track_count: jspf.playlist.track.length
+                  id: id
+                ]
+            , (err, res, body, success) =>
+              return if handle_errors @request, @response, body, res.statusCode
+              @send
+                okay: true
+                id: id
+              , 200
+              return
+
+  @post '/new_playlist', ->
+    id = shortid.generate()
+    if @request.session.user
+      s3Path = '/'+@request.session.user.name+'/'+id
+    else
+      s3Path = '/!/'+id
+
+    s3.headFile s3Path, (err, res) =>
+      if (res.statusCode < 300) and (res.statusCode >= 200)
+        console.log res.statusCode
+        @send
+          okay: false
+          err:
+            msg: 'That playlist already exists. Weird. Try saving again.'
+        , 409
+        return
+
+      json = JSON.stringify @body
+      buffer = new Buffer json
+
+      saveFile.call @, buffer, s3Path, id
+
+  @put '/save_playlist/:id', ->
+    id = @params.id
+    if @request.session.user
+      s3Path = '/'+@request.session.user.name+'/'+id
+    else
+      s3Path = '/!/'+id
+
+    s3.headFile s3Path, (err, res) =>
+      if res.statusCode != 200
+        @send
+          okay: false
+          err:
+            msg: 'That playlist does not exist (has it expired?) or you do not have permission to overwrite it.'
+        , 403
+        return
+
+      json = JSON.stringify @body
+      buffer = new Buffer json
+
+      saveFile.call @, buffer, s3Path, id
+
 
   @get '/playlist/:id', ->
     if @request.session.user
@@ -385,14 +436,21 @@ zappa.run config.port, ->
     else
       s3Path = '/!/'+@params.id
 
-    buffer = ''
-    req = s3.getFile s3Path, (err, res) =>
-      console.log err
-      return if handle_errors @request, @response, err, 500
-      res.setEncoding 'utf8'
-      res.on 'data', (chunk) -> buffer += chunk
-      res.on 'end', (a, b, c) =>
-        console.log a
-        for own k,v of res.headers
-          @response.set k, v
-        @send buffer
+    s3.headFile s3Path, (err, res) =>
+      if res.statusCode != 200
+        @send
+          okay: false
+          err:
+            msg: 'That playlist does not exist (has it expired?).'
+        , 403
+        return
+
+      buffer = ''
+      req = s3.getFile s3Path, (err, res) =>
+        return if handle_errors @request, @response, err, 500
+        res.setEncoding 'utf8'
+        res.on 'data', (chunk) -> buffer += chunk
+        res.on 'end', (a, b, c) =>
+          for own k,v of res.headers
+            @response.set k, v
+          @send buffer

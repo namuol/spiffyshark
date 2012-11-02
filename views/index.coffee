@@ -335,24 +335,48 @@ coffeescript ->
             text ' by ' + @creator
 
     error_template = coffeecup.compile ->
-      for err in @errors
-        div class:'alert alert-error fade in', 'data-debug-info':err.debug_info, ->
-          button type:'button', class:'close', 'data-dismiss':'alert', '×'
-          strong 'Error: '
-          text err.msg
+      div class:'alert alert-error fade in', 'data-debug-info':@msg.debug_info, ->
+        button type:'button', class:'close', 'data-dismiss':'alert', '×'
+        strong 'Error: '
+        text @msg.msg
 
     alert_template = coffeecup.compile ->
-      for err in @errors
-        div class:'alert fade in', 'data-debug-info':err.debug_info, ->
-          button type:'button', class:'close', 'data-dismiss':'alert', '×'
-          strong 'Warning: '
-          text err.msg
+      div class:'alert fade in', 'data-debug-info':@msg.debug_info, ->
+        button type:'button', class:'close', 'data-dismiss':'alert', '×'
+        strong 'Warning: '
+        text @msg.msg
 
     playlist_legend_template = coffeecup.compile ->
       span id:'playlist_title', contenteditable:'true', spellcheck:'false', @title
       text ' by '
       span id:'playlist_creator', contenteditable:'true', spellcheck:'false', @creator
+
     $ ->
+      addMsg = (msg) ->
+        if not msg.transient
+          messages = JSON.parse(localStorage.getItem('messages')) or []
+          messages.push msg
+          localStorage.setItem 'messages', JSON.stringify messages
+        renderMsg msg
+
+      renderMsg = (msg) ->
+        switch msg.type
+          when 'error'
+            el = $(error_template(msg: msg))
+          when 'alert'
+            el = $(alert_template(msg: msg))
+
+        $('#msgs').prepend el
+        console.log el
+        el.find('button.close').click ->
+          messages = JSON.parse(localStorage.getItem('messages')) or []
+          messages.remove $(@).parent().index()
+          localStorage.setItem 'messages', JSON.stringify messages
+        
+      messages = JSON.parse(localStorage.getItem('messages')) or []
+      for msg in messages
+        renderMsg msg
+
       $('#show_login_form').click ->
         $(@).hide()
         $('#log-in').show()
@@ -543,9 +567,10 @@ coffeescript ->
             else
               msg = 'Unexpected Error'
 
-          $('#msgs').prepend error_template errors: [
+          addMsg
+            transient: true
+            type: 'error'
             msg: msg
-          ]
 
         #$('#user_button').click (e) ->
         #  e.preventDefault()
@@ -780,14 +805,23 @@ coffeescript ->
               for ext in arr
                 if ext.selected in [true, 'true']
                   track.extension[gs_songs_rel] = [ext]
+          if playlist_id is null
+            type = 'POST'
+            url = '/new_playlist'
+          else
+            type = 'PUT'
+            url = '/save_playlist/' + playlist_id
+
           setTimeout ->
             $.ajax
-              type: 'PUT'
+              type: type
               cache: false
-              url:'/save_playlist/' + playlist_id
+              url: url
               data: to_save
-            .complete =>
+            .success (data) =>
               playlistSaved()
+              playlist_id = data.id
+              app.setLocation '#/playlist/' + data.id
             .error (xhr, err, thrown) =>
               playlistDirtied()
           , 200
@@ -800,6 +834,7 @@ coffeescript ->
             track: []
 
         @get '#/new_playlist', ->
+          playlist_id = null
           $('.nav .active').removeClass 'active'
           $('.nav [href="#/help"]').parent().addClass 'active'
           $('.content').hide()
@@ -962,7 +997,9 @@ coffeescript ->
             expires = xhr.getResponseHeader 'Expires'
 
             if expires
-              $('#msgs').prepend alert_template errors: [
+              addMsg
+                transient: true
+                type: 'alert'
                 msg:"""Since you are not logged in, this playlist file expires <strong>#{moment(expires).fromNow()}</strong>.
                 <br/>
                 Log in with your Grooveshark account, and you can:
@@ -971,13 +1008,13 @@ coffeescript ->
                   <li>Export your playlist files to Grooveshark playlists.
                 </ul>
                 """
-              ]
 
             playlist_loaded()
 
           .error (xhr, err, thrown) =>
             $('#playlist').hide()
             $('#playlist_loading').hide()
+            app.setLocation '#/'
 
         @post '#/upload_playlist', ->
           file = $('#upload input[type=file]')[0].files[0]
