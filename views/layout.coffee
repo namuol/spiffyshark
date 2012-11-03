@@ -42,6 +42,7 @@ html ->
               , ->
                 input
                   id:'log-in-username'
+                  autocomplete:'false'
                   name:'username'
                   placeholder:'Grooveshark Username'
                   type:'text'

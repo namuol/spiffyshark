@@ -86,7 +86,7 @@ div class:'content container', id:'playlist', ->
           i class:'icon-download-alt icon-white'
           span ' Save'
         text '&nbsp;'
-        button id:'generate_playlist', class:'btn btn-inverse btn-large', ->
+        button id:'show_gs_playlist', class:'btn btn-inverse btn-large', ->
           text '&nbsp;'
         br ''
         strong id:'disconnected_msg', 'Uh oh! Connection lost. Try refreshing the page.'
@@ -135,7 +135,6 @@ coffeescript ->
     window.gs_songs_rel = 's'
     window.gs_playlist_rel = 'p'
 
-
     song_modal_template = coffeecup.compile ->
       div class:'modal-header', ->
         button
@@ -169,12 +168,12 @@ coffeescript ->
           div class:'modal_search_results'
 
     grooveshark_playlist_link_modal_template = coffeecup.compile ->
-      div class:'modal hide fade', ->
+      div class:'modal hide', ->
         div class:'modal-body', ->
           h4 'Success!'
           p 'Click the link below to view your shiny new playlist!'
           div class:'well well-small', ->
-            a class:'grooveshark_playlist_link', href:@url, target:'_blank', ->
+            a class:'grooveshark_playlist_link', href:@url, target:'grooveshark', ->
               text @url
 
     song_modal_search_results_template = coffeecup.compile ->
@@ -190,13 +189,13 @@ coffeescript ->
           text ' '
           img class:'album_art', src:"http://images.grooveshark.com/static/albums/40_#{song.CoverArtFilename or 'album'}"
           div class:'track_title', ->
-            a href:"/gs_song/#{song.SongID}", target:'_blank', ->
+            a href:"/gs_song/#{song.SongID}", target:'grooveshark', ->
               text ' ' + song.SongName
           div class:'track_artist_album', ->
-            a href:"/gs_artist/#{song.ArtistID}", target:'_blank', ->
+            a href:"/gs_artist/#{song.ArtistID}", target:'grooveshark', ->
               text song.ArtistName
             text ' • '
-            a href:"/gs_album/#{song.AlbumID}", target:'_blank', ->
+            a href:"/gs_album/#{song.AlbumID}", target:'grooveshark', ->
               text song.AlbumName
           div class:'score', ->
             text song.score or 0
@@ -309,13 +308,13 @@ coffeescript ->
             text ' '
             img class:'album_art', src:"http://images.grooveshark.com/static/albums/40_#{song.CoverArtFilename or 'album'}"
             div class:'track_title', ->
-              a href:"/gs_song/#{song.SongID}", target:'_blank', ->
+              a href:"/gs_song/#{song.SongID}", target:'grooveshark', ->
                 text ' ' + song.SongName
             div class:'track_artist_album', ->
-              a href:"/gs_artist/#{song.ArtistID}", target:'_blank', ->
+              a href:"/gs_artist/#{song.ArtistID}", target:'grooveshark', ->
                 text song.ArtistName
               text ' • '
-              a href:"/gs_album/#{song.AlbumID}", target:'_blank', ->
+              a href:"/gs_album/#{song.AlbumID}", target:'grooveshark', ->
                 text song.AlbumName
           if not song?
             return
@@ -359,10 +358,12 @@ coffeescript ->
 
     $ ->
       addMsg = (msg) ->
+        ###
         if not msg.transient
           messages = JSON.parse(localStorage.getItem('messages')) or []
           messages.push msg
           localStorage.setItem 'messages', JSON.stringify messages
+        ###
         renderMsg msg
 
       renderMsg = (msg) ->
@@ -373,20 +374,31 @@ coffeescript ->
             el = $(alert_template(msg: msg))
 
         $('#msgs').prepend el
+        ###
         el.find('button.close').click ->
           messages = JSON.parse(localStorage.getItem('messages')) or []
           messages.remove $(@).parent().index()
           localStorage.setItem 'messages', JSON.stringify messages
-        
+        ###
+      ###
       messages = JSON.parse(localStorage.getItem('messages')) or []
       for msg in messages
         renderMsg msg
+      ###
 
       $('#show_login_form').click ->
         $(@).hide()
         $('#log-in').show()
         $('#log-in input').first().focus()
         return false
+
+      $('#log-in').submit ->
+        setTimeout =>
+          $(@).find('button').button 'loading'
+          $(@).find('input').attr 'disabled', 'disabled'
+        , 0
+        return true
+
 
       $.fn.transitionContent = (ms) ->
         ms = ms or 250
@@ -431,15 +443,17 @@ coffeescript ->
       #$('button').transitionContent(5000)
 
       animooted = '<i class="icon-refresh animooted"></i>'
+      animooted_white = '<i class="icon-refresh icon-white animooted"></i>'
 
       $.fn.button.defaults.loadingText = ->
-        animooted + ' loading...'
+        animooted_white + ' loading...'
       
       playlistDirtied = =>
         change = window.lastChange = new Date
         window.playlistDirty = true
         $('#save_playlist').button 'reset'
         setTimeout ->
+          return
           return if not window.playlistDirty
           if lastChange - change is 0
             $('#save_playlist').click()
@@ -736,29 +750,16 @@ coffeescript ->
               getSong track.idx, cb
             $('#album_search_modal').modal 'hide'
           return false
-
-        $('#generate_playlist').live 'click', (e) ->
-          $('#generate_playlist').button 'loading'
-          gs_playlist =
-            title: jspf.playlist.title
-            tracks: []
-          for track in jspf.playlist.track
-            ext = track.extension[gs_songs_rel]
-            if ext? and ext.length? and ext.length > 0
-              for song in ext
-                if song.selected
-                  gs_playlist.tracks.push song.SongID
-                  break
-          $.ajax
-            url:'/grooveshark_playlist'
-            data: gs_playlist
-            type: 'POST'
-          .success (data) =>
-            $('#generate_playlist').button 'reset'
-            url = data.url.replace('listen.', '')
-            $(grooveshark_playlist_link_modal_template
-              url: url
-            ).modal()
+        
+        $('#show_gs_playlist').live 'click', (e) ->
+          if not jspf.playlist.extension[gs_playlist_rel]?
+            alert 'You must save the playlist, first.'
+            return
+          url = jspf.playlist.extension[gs_playlist_rel][0].url
+          url = url.replace 'listen.', ''
+          $(grooveshark_playlist_link_modal_template
+            url: url
+          ).modal()
 
         $('button.getSong').live 'click', (e) ->
           getSong $(@).parent().parent().index(), ->
@@ -808,7 +809,6 @@ coffeescript ->
           for song in track.extension[gs_songs_rel]
             delete song['selected']
             delete song['chosen']
-          console.log gs_song_idx
           track.extension[gs_songs_rel][gs_song_idx].selected = true
           track.chosen = true
           $(window.selectedRow).replaceWith playlist_row_template index:i, track:track
@@ -834,15 +834,37 @@ coffeescript ->
             type = 'PUT'
             url = '/save_playlist/' + playlist_id
 
+          gs_playlist =
+            name: jspf.playlist.creator + ' - ' + jspf.playlist.title
+            tracks: []
+          if jspf.playlist.extension[gs_playlist_rel]?
+            gs_playlist.id = jspf.playlist.extension[gs_playlist_rel][0].id
+          for track in jspf.playlist.track
+            ext = track.extension[gs_songs_rel]
+            if ext? and ext.length? and ext.length > 0
+              for song in ext
+                if song.selected
+                  gs_playlist.tracks.push song.SongID
+                  break
+          to_save.playlist.extension = to_save.playlist.extension or {}
+          console.log to_save
+
           setTimeout ->
             $.ajax
               type: type
               cache: false
               url: url
-              data: to_save
+              data:
+                gs_playlist: gs_playlist
+                jspf: to_save
             .success (data) =>
+              console.log data
               playlistSaved()
               playlist_id = data.id
+              jspf.playlist.extension[gs_playlist_rel] = [{
+                id: data.gs_id
+                url: data.gs_url
+              }]
               app.setLocation '#/playlist/' + data.id
             .error (xhr, err, thrown) =>
               playlistDirtied()
@@ -921,6 +943,7 @@ coffeescript ->
             title: 'New Playlist'
             info: 'http://spiffyshark.com'
             track: []
+            extension: {}
 
         @get '#/search', ->
           $('#album_search_modal').modal()

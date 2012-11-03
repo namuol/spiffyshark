@@ -159,6 +159,10 @@ button
   color #C3EEAA !important
   text-decoration none
 
+.navbar input[type=text], .navbar input[type=password]
+  background-color rgba(0,0,0,0.25) !important
+  color white !important
+  text-shadow 0 1px 0 black
 
 .navbar .divider
   width 20px
@@ -536,25 +540,25 @@ button.editTrack
   background rgba(0,0,0,0.4)
   */
 
-#generate_playlist
+#show_gs_playlist
   width 155px
   background url(gs_full.png) center no-repeat, linear-gradient(top, #444, #222) !important
 
-#generate_playlist:hover,
-#generate_playlist:active,
-#generate_playlist.disabled,
-#generate_playlist[disabled]
+#show_gs_playlist:hover,
+#show_gs_playlist:active,
+#show_gs_playlist.disabled,
+#show_gs_playlist[disabled]
   background url(gs_full.png) center no-repeat, linear-gradient(top, #222, #222) !important
 
 @media screen and (max-width: 705px)
-  #generate_playlist
+  #show_gs_playlist
     width 44px
     background url(gs.png) center no-repeat, linear-gradient(top, #444, #222) !important
 
-  #generate_playlist:hover,
-  #generate_playlist:active,
-  #generate_playlist.disabled,
-  #generate_playlist[disabled]
+  #show_gs_playlist:hover,
+  #show_gs_playlist:active,
+  #show_gs_playlist.disabled,
+  #show_gs_playlist[disabled]
     background url(gs.png) center no-repeat, linear-gradient(top, #222, #151515) !important
 
 .grooveshark_logo_text
@@ -581,3 +585,6 @@ button.editTrack
   color white
   text-shadow 0 1px 0 black
   background rgba(255,255,255,0.1)
+
+.icon-trash
+  margin-left -1px

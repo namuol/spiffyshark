@@ -205,22 +205,60 @@ zappa.run config.port, ->
           gs: gs_body
           xspf:
             playlists: body.playlists
+  
+  saveGSPlaylist = (cb) ->
+    # Basic playlist validation:
+    if not (@body.jspf? and @body.jspf.playlist? and @body.jspf.playlist.track?)
+      console.log @body
+      @send
+        okay: false
+        err:
+          msg: 'Your playlist appears to be formatted incorrectly!'
+      , 400
+      return
+    
+    @body.jspf.playlist.extension = @body.jspf.playlist.extension or {}
 
-  @post '/grooveshark_playlist', ->
     if @request.session.user
       client = getClient(@request).gs
     else
       client = gs_noauth
-    client.request 'createPlaylist',
-      name: @body.title
-      songIDs: @body.tracks
-    , (err, status, gs_body) =>
-      return if handle_errors @request, @response, err, status
-      gs_noauth.request 'getPlaylistURLFromPlaylistID',
-        playlistID: gs_body.playlistID
+
+    getURL = (gs_body) =>
+      gs_id = gs_body.playlistID
+      client.request 'getPlaylistURLFromPlaylistID',
+        playlistID: gs_id
       , (err, status, gs_body) =>
-        return cb(err) if err
-        @send gs_body
+        return if handle_errors @request, @response, err, status
+        @body.jspf.playlist.extension[config.gs_playlist_rel] = [{
+          id: gs_id
+          url: gs_body.url
+        }]
+        cb gs_body
+
+    if @body.gs_playlist.id?
+      # Update existing playlist
+      client.request 'setPlaylistSongs',
+        playlistID: @body.gs_playlist.id
+        songIDs: @body.gs_playlist.tracks
+      , (err, status, gs_body) =>
+        return if handle_errors @request, @response, err, status
+        client.request 'renamePlaylist',
+          playlistID: @body.gs_playlist.id
+          name: @body.gs_playlist.name
+        , (err, status, gs_body) =>
+          return if handle_errors @request, @response, err, status
+          gs_body.playlistID = @body.gs_playlist.id
+          getURL gs_body
+    else
+      # Create new playlist
+      client.request 'createPlaylist',
+        name: @body.gs_playlist.name
+        songIDs: @body.gs_playlist.tracks
+      , (err, status, gs_body) =>
+        return if handle_errors @request, @response, err, status
+        console.log gs_body
+        getURL gs_body
 
   @post '/login', ->
     client = new GroovesharkClient config.grooveshark_key, config.grooveshark_secret
@@ -329,9 +367,11 @@ zappa.run config.port, ->
 
   
   saveFile = (buffer, s3Path, id) ->
-    if @body.playlist
-      title = @body.playlist.title or ''
-      creator = @body.playlist.title or ''
+    title = @body.jspf.playlist.title or ''
+    creator = @body.jspf.playlist.creator or ''
+    track_count = @body.jspf.playlist.track.length
+    gs_url = @body.jspf.playlist.extension[config.gs_playlist_rel][0].url
+    gs_id = @body.jspf.playlist.extension[config.gs_playlist_rel][0].id
 
     req = s3.putBuffer buffer, s3Path,
       'Content-Length': buffer.length
@@ -344,15 +384,17 @@ zappa.run config.port, ->
           err:
             msg: 'Unexpected problem saving your playlist!'
         , 500
-      else if not (@request.session.user? and @body.playlist?)
+        return
+
+      if not @request.session.user?
+        console.log @body.jspf.playlist.extension
         @send
           okay: true
+          gs_url: gs_url
+          gs_id: gs_id
           id: id
         , 200
       else
-        title = @body.playlist.title
-        creator = @body.playlist.creator
-        track_count = @body.playlist.track.length
         found = false
         parse.getUser @request.session.user.pid, (err, res, user, success) =>
           return if handle_errors @request, @response, user, res.statusCode
@@ -369,12 +411,13 @@ zappa.run config.port, ->
                 return if handle_errors @request, @response, body, res.statusCode
                 @send
                   okay: true
+                  gs_url: gs_url
+                  gs_id: gs_id
                   id: id
                 , 200
                 return
-
           if not found
-            @body.playlist.track = @body.playlist.track or []
+            @body.jspf.playlist.track = @body.jspf.playlist.track or []
             parse.sessionToken = @request.session.user.ptoken
             parse.updateUser @request.session.user.pid,
               playlists:
@@ -382,58 +425,62 @@ zappa.run config.port, ->
                 objects: [
                   title: title
                   creator: creator
-                  track_count: @body.playlist.track.length
+                  track_count: @body.jspf.playlist.track.length
                   id: id
                 ]
             , (err, res, body, success) =>
               return if handle_errors @request, @response, body, res.statusCode
               @send
                 okay: true
+                gs_url: gs_url
+                gs_id: gs_id
                 id: id
               , 200
               return
 
   @post '/new_playlist', ->
-    id = shortid.generate()
-    if @request.session.user
-      s3Path = '/'+@request.session.user.name+'/'+id
-    else
-      s3Path = '/!/'+id
+    saveGSPlaylist.call @, =>
+      id = shortid.generate()
+      if @request.session.user
+        s3Path = '/'+@request.session.user.name+'/'+id
+      else
+        s3Path = '/!/'+id
 
-    s3.headFile s3Path, (err, res) =>
-      if (res.statusCode < 300) and (res.statusCode >= 200)
-        @send
-          okay: false
-          err:
-            msg: 'That playlist already exists. Weird. Try saving again.'
-        , 409
-        return
+      s3.headFile s3Path, (err, res) =>
+        if (res.statusCode < 300) and (res.statusCode >= 200)
+          @send
+            okay: false
+            err:
+              msg: 'That playlist already exists. Weird. Try saving again.'
+          , 409
+          return
 
-      json = JSON.stringify @body
-      buffer = new Buffer json
+        json = JSON.stringify @body.jspf
+        buffer = new Buffer json
 
-      saveFile.call @, buffer, s3Path, id
+        saveFile.call @, buffer, s3Path, id
 
   @put '/save_playlist/:id', ->
-    id = @params.id
-    if @request.session.user
-      s3Path = '/'+@request.session.user.name+'/'+id
-    else
-      s3Path = '/!/'+id
+    saveGSPlaylist.call @, =>
+      id = @params.id
+      if @request.session.user
+        s3Path = '/'+@request.session.user.name+'/'+id
+      else
+        s3Path = '/!/'+id
 
-    s3.headFile s3Path, (err, res) =>
-      if res.statusCode != 200
-        @send
-          okay: false
-          err:
-            msg: 'That playlist does not exist (has it expired?) or you do not have permission to overwrite it.'
-        , 403
-        return
+      s3.headFile s3Path, (err, res) =>
+        if res.statusCode != 200
+          @send
+            okay: false
+            err:
+              msg: 'That playlist does not exist (has it expired?) or you do not have permission to overwrite it.'
+          , 403
+          return
 
-      json = JSON.stringify @body
-      buffer = new Buffer json
+        json = JSON.stringify @body.jspf
+        buffer = new Buffer json
 
-      saveFile.call @, buffer, s3Path, id
+        saveFile.call @, buffer, s3Path, id
 
   @del '/playlist/:id', -> requiresLogin @request, @response, =>
     s3Path = '/'+@request.session.user.name+'/'+@params.id
