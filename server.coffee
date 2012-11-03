@@ -14,6 +14,11 @@ async = require 'async'
 {exec} = require 'child_process'
 exec 'cake build'
 
+Array::remove = (from, to) ->
+  rest = @slice((to or from) + 1 or @length)
+  @length = (if from < 0 then @length + from else from)
+  @push.apply this, rest
+
 alnum = (s) ->
   s.replace(/[^a-z0-9]/gi, '').toUpperCase()
 
@@ -347,6 +352,7 @@ zappa.run config.port, ->
       else
         title = @body.playlist.title
         creator = @body.playlist.creator
+        track_count = @body.playlist.track.length
         found = false
         parse.getUser @request.session.user.pid, (err, res, user, success) =>
           return if handle_errors @request, @response, user, res.statusCode
@@ -354,6 +360,7 @@ zappa.run config.port, ->
             if file.id is id
               file.title = title
               file.creator = creator
+              file.track_count = track_count
               found = true
               parse.sessionToken = @request.session.user.ptoken
               parse.updateUser @request.session.user.pid,
@@ -367,7 +374,7 @@ zappa.run config.port, ->
                 return
 
           if not found
-            user.playlists.push
+            @body.playlist.track = @body.playlist.track or []
             parse.sessionToken = @request.session.user.ptoken
             parse.updateUser @request.session.user.pid,
               playlists:
@@ -395,7 +402,6 @@ zappa.run config.port, ->
 
     s3.headFile s3Path, (err, res) =>
       if (res.statusCode < 300) and (res.statusCode >= 200)
-        console.log res.statusCode
         @send
           okay: false
           err:
@@ -429,6 +435,42 @@ zappa.run config.port, ->
 
       saveFile.call @, buffer, s3Path, id
 
+  @del '/playlist/:id', -> requiresLogin @request, @response, =>
+    s3Path = '/'+@request.session.user.name+'/'+@params.id
+
+    s3.deleteFile s3Path, (err, res) =>
+      if (res.statusCode != 404) and ((res.statusCode >= 300) or (res.statusCode < 200))
+        @send
+          okay: false
+          err:
+            msg: 'Unexpected problem deleting your playlist!'
+        , 500
+        return
+      parse.getUser @request.session.user.pid, (err, res, user, success) =>
+        return if handle_errors @request, @response, user, res.statusCode
+        i=0
+        found = false
+        for file in user.playlists
+          console.log file
+          if file.id != @params.id
+            ++i
+          else
+            found = true
+            user.playlists.remove i
+            parse.sessionToken = @request.session.user.ptoken
+            parse.updateUser @request.session.user.pid,
+              playlists: user.playlists
+            , (err, res, body, success) =>
+              return if handle_errors @request, @response, body, res.statusCode
+              @send
+                okay: true
+              , 200
+              return
+        if not found
+          # Maybe they hit delete twice, somehow?
+          @send
+            okay: true
+          , 200
 
   @get '/playlist/:id', ->
     if @request.session.user

@@ -1,15 +1,15 @@
-
-
 div class:'content container', id:'main', ->
-  div id:'new_playlist_options', ->
-    a id:'create', class:'row', href:'#/new_playlist', ->
-      legend 'Create'
-    hr ''
-    a id:'search', class:'row', href:'#/search', ->
-      legend 'Search'
-    hr ''
-    div id:'import', class:'row', ->
-      legend 'Import'
+  div id:'new_playlist_options_wrapper', ->
+    div id:'new_playlist_options', class:'row', ->
+      a id:'create', class:'row option', href:'#/new_playlist', ->
+        legend 'Create'
+        p '...your next great playlist'
+      a id:'search', class:'row option', href:'#/search', ->
+        legend 'Search'
+        p '...for your favorite album'
+      div id:'import', class:'row option', ->
+        legend 'Import'
+        p '...your playlist file'
 
 div class:'content container', id:'help', ->
   h2 'Help contents go here.'
@@ -23,7 +23,10 @@ if @user
       i class:'icon-refresh animooted'
       ul id:'gs_playlists_list', class:'playlists_list'
     ###
-    legend 'Your Playlists'
+    legend ->
+      text 'Your Playlists'
+      a href:'#/new_playlist', class:'btn btn-clear', ->
+        i class:'icon-plus icon-white'
     i class:'icon-refresh icon-white animooted'
     ul id:'xspf_playlists_list', class:'playlists_list'
 
@@ -84,7 +87,7 @@ div class:'content container', id:'playlist', ->
           span ' Save'
         text '&nbsp;'
         button id:'generate_playlist', class:'btn btn-inverse btn-large', ->
-          text 'Export to Grooveshark!'
+          text '&nbsp;'
         br ''
         strong id:'disconnected_msg', 'Uh oh! Connection lost. Try refreshing the page.'
 
@@ -329,10 +332,13 @@ coffeescript ->
 
     xspf_playlist_row_template = coffeecup.compile ->
       li 'data-playlist-id':@id, ->
+        button 'data-id':''+@id, class:'del_playlist btn btn-clear', ->
+          i class:'icon-trash icon-white'
         a href:'#/playlist/'+@id, ->
-          text @title
           if @creator
-            text ' by ' + @creator
+            text @creator + ' - '
+          text @title
+          text " (#{@track_count} songs)"
 
     error_template = coffeecup.compile ->
       div class:'alert alert-error fade in', 'data-debug-info':@msg.debug_info, ->
@@ -367,7 +373,6 @@ coffeescript ->
             el = $(alert_template(msg: msg))
 
         $('#msgs').prepend el
-        console.log el
         el.find('button.close').click ->
           messages = JSON.parse(localStorage.getItem('messages')) or []
           messages.remove $(@).parent().index()
@@ -381,6 +386,7 @@ coffeescript ->
         $(@).hide()
         $('#log-in').show()
         $('#log-in input').first().focus()
+        return false
 
       $.fn.transitionContent = (ms) ->
         ms = ms or 250
@@ -632,12 +638,12 @@ coffeescript ->
             album: ''
             extension: {}
           idx = (jspf.playlist.track.push track) - 1
-          $('#playlist .uploaded_playlist').append playlist_row_template
+          $('#playlist_items').append playlist_row_template
             track: track
             index: idx
             
-          $('#playlist .uploaded_playlist tr').last().find('button.editTrack').click()
-          $('#playlist_items').sortable 'refresh'
+          $('#playlist_items tr').last().find('button.editTrack').click()
+          $('table tbody').sortable 'refresh'
           playlistDirtied()
 
         $('#add_album').live 'click', (e) ->
@@ -678,6 +684,17 @@ coffeescript ->
               res.data.thumb = el.parent().data('thumb')
               result_el.html discogs_master_result_template res.data
           return false
+        
+        $('button.del_playlist').live 'click', (e) ->
+          if confirm 'Are you sure you want to delete that playlist? This cannot be undone!'
+            $(@).parent().hide()
+            $.ajax
+              type: 'DELETE'
+              url: '/playlist/' + $(@).data 'id'
+            .success (data) =>
+              $(@).parent().remove()
+            .error (data) =>
+              $(@).parent().show()
 
         $('.hide_discogs_master').live 'click', (e) ->
           $(@).hide()
@@ -697,7 +714,6 @@ coffeescript ->
           $.getJSON $(@).parent().data('url') + '?callback=?'
           , (res, status, xhr) =>
             $(@).button 'reset'
-            console.log res
             unless res.meta.status is 200
               console.err res
               alert "Unexpected Error"
@@ -709,9 +725,8 @@ coffeescript ->
                 creator: creator
                 album: album
                 extension: {}
-              console.log track
               idx = (jspf.playlist.track.push track) - 1
-              $('#playlist .uploaded_playlist').append playlist_row_template
+              $('#playlist_items').append playlist_row_template
                 track: track
                 index: idx
               track.idx = idx
@@ -793,7 +808,7 @@ coffeescript ->
           for song in track.extension[gs_songs_rel]
             delete song['selected']
             delete song['chosen']
-          console.log track.extension[gs_songs_rel]
+          console.log gs_song_idx
           track.extension[gs_songs_rel][gs_song_idx].selected = true
           track.chosen = true
           $(window.selectedRow).replaceWith playlist_row_template index:i, track:track
@@ -836,18 +851,6 @@ coffeescript ->
         playlist_loaded = ->
           console.log jspf
 
-          $('#playlist legend').html playlist_legend_template jspf.playlist
-
-          # Initial state is not dirty.
-          #playlistSaved()
-
-          i=0
-          for track in jspf.playlist.track
-            $('#playlist .uploaded_playlist').append playlist_row_template
-              track:track
-              index:i
-            ++i
-
           #=====================
           # Found here: http://stackoverflow.com/questions/1307705/jquery-ui-sortable-with-table-and-tr-width/1372954#1372954
           tableDragHelper = (e, tr) ->
@@ -865,7 +868,7 @@ coffeescript ->
           row_deleted = false
           old_pos = undefined
           drag_item = undefined
-
+          
           $('table tbody').sortable
             helper: tableDragHelper
             start: (e, ui) ->
@@ -910,6 +913,8 @@ coffeescript ->
               playlistDirtied()
             tolerance: 'pointer'
 
+
+
         new_playlist =
           playlist:
             creator: 'Anonymous'
@@ -928,9 +933,10 @@ coffeescript ->
           $('.content').hide()
           $('#playlist').show()
           $('#save_playlist').button('reset').attr('disabled','disabled')
-          $('#playlist .uploaded_playlist').html ''
-          jspf = $.extend new_playlist, {}
+          $('#playlist_items').html ''
+          jspf = $.extend true, new_playlist, {}
           jspf.playlist.creator = $('#username').val() or 'Anonymous'
+          $('#playlist legend').html playlist_legend_template jspf.playlist
 
           playlist_loaded()
 
@@ -974,11 +980,12 @@ coffeescript ->
             $('.content').hide()
             $('#playlist').show()
             $('#playlist_loading').hide()
+            playlist_loaded()
             return
           else
             $('.nav .active').removeClass 'active'
             $('.content').hide()
-            $('#playlist .uploaded_playlist').html ''
+            $('#playlist_items').html ''
             $('#playlist').hide()
             $('#playlist_loading').show()
 
@@ -1005,6 +1012,17 @@ coffeescript ->
                 jspf = data
 
             jspf.playlist.track = jspf.playlist.track or []
+            $('#playlist legend').html playlist_legend_template jspf.playlist
+
+            i=0
+            for track in jspf.playlist.track
+              $('#playlist_items').append playlist_row_template
+                track:track
+                index:i
+              ++i
+
+            playlist_loaded()
+
             expires = xhr.getResponseHeader 'Expires'
 
             if expires
@@ -1019,8 +1037,6 @@ coffeescript ->
                   <li>Export your playlist files to Grooveshark playlists.
                 </ul>
                 """
-
-            playlist_loaded()
 
           .error (xhr, err, thrown) =>
             $('#playlist').hide()

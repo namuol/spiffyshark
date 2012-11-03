@@ -2,6 +2,13 @@ doctype 5
 html ->
   head ->
     meta charset:'utf-8'
+    meta
+      name:'viewport'
+      content:'''width=device-width; 
+              initial-scale=0.75;
+              maximum-scale=0.75;
+              minimum-scale=0.75; 
+              user-scalable=no;'''
     meta name:'apple-mobile-web-app-capable', content:'yes'
     title @title
 
@@ -58,14 +65,14 @@ html ->
                 a
                   id:'user_button'
                   href:'#/playlists'
-                  class:'btn btn-info'
+                  class:'btn btn-clear'
                 , ->
                   i class:'icon-white icon-user'
                   span id:'username-display', " #{@user.name}"
                 text '&nbsp;'
                 button
                   id:'log-out'
-                  class:'btn btn-inverse'
+                  class:'btn btn-clear'
                   type:'submit'
                 , 'Log Out'
       div class:'container', ->
@@ -83,8 +90,9 @@ html ->
           text 'Spiffyshark'
         section id:'slogan', ->
           text 'Better '
-          span class:'grooveshark_logo_text', 'Grooveshark'
-          text ' Playlists.'
+          span class:'grooveshark_logo_text', ->
+            span 'Grooveshark'
+          text ' Playlists'
 
     div id:'content', class:'container', ->
 

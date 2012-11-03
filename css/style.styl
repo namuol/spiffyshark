@@ -39,7 +39,7 @@ i.icon-refresh.animooted
   -webkit-animation-timing-function  linear
 
 button
-  transition box-shadow 250ms ease-out, opacity 250ms ease-out, width 250ms ease-out
+  transition box-shadow 250ms ease-out, opacity 250ms ease-out
 
 .content
   display none
@@ -57,7 +57,13 @@ button
   text-transform lowercase
   text-shadow 0 1px 1px black
 
+#new_playlist_options_wrapper
+  text-align center
+  margin 0 auto
+
 #new_playlist_options
+  display inline-block
+  margin 0 auto
   margin-top 20px
 
 #new_playlist_options > hr
@@ -67,7 +73,7 @@ button
   border 0
   //border-top 1px solid rgba(255,255,255,0.5)
 
-#new_playlist_options > .row
+#new_playlist_options > .option
   text-decoration none
   display block
   cursor pointer
@@ -76,32 +82,54 @@ button
   box-sizing border-box
   padding-left 94px
   height 94px
-  width 660px
   text-transform lowercase
+  opacity 0.8
+  transition background-position 150ms, opacity 150ms, width 150ms, height 150ms
+  text-align left
+  width 400px
+  //text-shadow 0 1px 0 black
+  /*
+  float left
+  margin-right 10px
+  */
 
+#new_playlist_options > .option > p
+  opacity 0
+  margin-left 20px
+  margin-top -15px
+  color white !important
+  font-size 20px
+  transition opacity 150ms
+
+/*
 @media screen and (max-width: 705px)
-  #new_playlist_options > .row
+  #new_playlist_options > .option
     width auto
+*/
 
 #create
-  background url(64_html.png) 15px 45px no-repeat rgba(0,0,0,0.2)
+  background url(64_html.png) 15px 45px no-repeat rgba(0,0,0,0.3)
 
 #search
-  background url(64_search.png) 15px 45px no-repeat rgba(0,0,0,0.2)
+  background url(64_search.png) 15px 45px no-repeat rgba(0,0,0,0.3)
 
 #import
-  background url(64_upload.png) 15px 45px no-repeat rgba(0,0,0,0.2)
+  background url(64_upload.png) 15px 45px no-repeat rgba(0,0,0,0.3)
+  margin-right 0 !important
 
-#new_playlist_options > .row
-  opacity 0.7
-  transition background-position 150ms, opacity 150ms
-
-#new_playlist_options > .row:hover,
-#new_playlist_options > .row.focus
+#new_playlist_options > .option:hover,
+#new_playlist_options > .option.focus
+  //width 300px
+  height 94px
   opacity 1
   background-position 15px 15px
 
-#new_playlist_options > .row > legend
+#new_playlist_options > .option:hover > p,
+#new_playlist_options > .option.focus > p
+  opacity 1
+
+
+#new_playlist_options > .option > legend
   border none
   font-size 30px
   box-sizing border-box
@@ -111,20 +139,22 @@ button
 #slogan
   text-transform lowercase
   margin-top -20px
-  margin-left 190px
-  font-weight bold
-  color black
+  font-size 15px
+  margin-left 175px
+  //font-weight bold
+  white-space nowrap
+  color white
 
 #brand_row
   text-align center
 
-.brand, .navbar-text, .brand a
+.brand, .navbar-text, .brand a, .navbar a
   text-transform lowercase
   color white !important
-  text-shadow none !important
+  text-shadow 0 1px 0 black !important
   transition color 250ms
 
-.brand a:hover
+.brand a:hover, .navbar a:hover
   transition color 250ms
   color #C3EEAA !important
   text-decoration none
@@ -151,7 +181,7 @@ button
   margin-top 3px
 
 body
-  background url(bg.jpg) center -90px no-repeat black
+  background url(bg.jpg) center -20px no-repeat black
   font-family 'Open Sans', sans-serif
   color white
 //  padding-top 40px
@@ -174,15 +204,36 @@ legend
   height 50px
   padding 0
   font-size 19px
+  padding-left 50px
+
+#playlists > ul > li > button.del_playlist
+  padding 0
+  box-sizing border-box
+  width 35px
+  height 40px
+  margin 0
+  margin-left -45px
+  margin-top -3px
 
 #playlists > ul > li > a
+  box-sizing border-box
   padding 14px 10px
+  padding-right 0
   display inline-block
   width 100%
   height 100%
   white-space nowrap
   overflow hidden
   text-overflow ellipsis
+  transition color 150ms
+
+@media screen and (max-width: 705px)
+  #playlists > ul > li
+    font-size 15px
+
+#playlists > ul > li > a:hover
+  text-decoration none
+  color white
 
 #playlists legend
   color white
@@ -190,6 +241,11 @@ legend
   width auto
   margin-bottom 0
   text-transform uppercase
+  padding 0 10px
+
+#playlists legend > .btn
+  margin-top -2px
+  margin-left 40px
 
 #playlist_loading
   padding-left 20px !important
@@ -293,6 +349,9 @@ button.add_album_tracks
 .uploaded_playlist .buttons
   padding 0
   width 40px
+
+.uploaded_playlist thead
+  color #333
 
 #playlist
   border-radius 6px
@@ -476,3 +535,49 @@ button.editTrack
 .table-striped > tbody > tr:nth-child(odd) > td
   background rgba(0,0,0,0.4)
   */
+
+#generate_playlist
+  width 155px
+  background url(gs_full.png) center no-repeat, linear-gradient(top, #444, #222) !important
+
+#generate_playlist:hover,
+#generate_playlist:active,
+#generate_playlist.disabled,
+#generate_playlist[disabled]
+  background url(gs_full.png) center no-repeat, linear-gradient(top, #222, #222) !important
+
+@media screen and (max-width: 705px)
+  #generate_playlist
+    width 44px
+    background url(gs.png) center no-repeat, linear-gradient(top, #444, #222) !important
+
+  #generate_playlist:hover,
+  #generate_playlist:active,
+  #generate_playlist.disabled,
+  #generate_playlist[disabled]
+    background url(gs.png) center no-repeat, linear-gradient(top, #222, #151515) !important
+
+.grooveshark_logo_text
+  display inline-block
+  margin-bottom -2px
+  background url(gs_text.png) center 100% no-repeat
+  background-size  100% auto
+  height 19px
+  width 87px
+
+.grooveshark_logo_text > span
+  color transparent
+
+.btn-sharp
+  border-radius 0
+
+.btn-clear
+  color white
+  text-shadow 0 1px 0 black
+  background rgba(0,0,0,0)
+
+.btn-clear:hover,
+.btn-clear:active
+  color white
+  text-shadow 0 1px 0 black
+  background rgba(255,255,255,0.1)
