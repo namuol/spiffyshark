@@ -660,6 +660,17 @@ coffeescript ->
           $('table tbody').sortable 'refresh'
           playlistDirtied()
 
+        update_del_song_button = ->
+          if $('#playlist_items tr.selected').toArray().length > 0
+            $('#del_song').attr 'disabled', false
+          else
+            $('#del_song').attr 'disabled', 'disabled'
+
+        $('#playlist_items tr td').live 'click', (e) ->
+          console.log 'click'
+          $(@).parent().toggleClass 'selected'
+          update_del_song_button()
+
         $('#add_album').live 'click', (e) ->
           $('#album_search_modal').modal()
           return false
@@ -902,7 +913,7 @@ coffeescript ->
             stop: (e, ui) ->
               #$('#del_song').hide()
               $('#add_song_group').show()
-              $('#del_song').attr 'disabled', 'disabled'
+              update_del_song_button()
               $('#del_song').removeClass 'warning'
             update: (e, ui) ->
               return if row_deleted
@@ -934,8 +945,15 @@ coffeescript ->
               drag_item.remove()
               playlistDirtied()
             tolerance: 'pointer'
-
-
+          $('#del_song').click ->
+            arr = $('#playlist_items tr.selected').toArray()
+            for el in arr
+              idx = $(el).index()
+              jspf.playlist.track.remove idx
+              $(el).remove()
+            if arr.length > 0
+              playlistDirtied()
+            $(@).attr 'disabled','disabled'
 
         new_playlist =
           playlist:
