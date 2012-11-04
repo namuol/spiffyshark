@@ -89,7 +89,8 @@ html ->
       div id:'brand_row', class:'row content', ->
         h1 id:'main_brand', ->
           text 'Spiffyshark'
-        section id:'slogan', ->
+          sup class:'alpha', 'alpha'
+        h2 id:'slogan', ->
           text 'Better '
           span class:'grooveshark_logo_text', ->
             span 'Grooveshark'
