@@ -89,7 +89,12 @@ html ->
       div id:'brand_row', class:'row content', ->
         h1 id:'main_brand', ->
           text 'Spiffyshark'
-          sup class:'alpha', 'alpha'
+          sup class:'alpha', ->
+            span
+              rel:'tooltip'
+              'data-original-title':'Very early preview; expect bugs!'
+              'data-placement': 'bottom'
+            , -> 'prealpha'
         h2 id:'slogan', ->
           text 'Better '
           span class:'grooveshark_logo_text', ->
@@ -116,6 +121,8 @@ html ->
         rest = @slice((to or from) + 1 or @length)
         @length = (if from < 0 then @length + from else from)
         @push.apply this, rest
+
+      $('[rel=tooltip][data-original-title]').tooltip()
 
       for script in window.scripts
         script()
