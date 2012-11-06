@@ -16,21 +16,20 @@ div class:'content container', id:'main', ->
 div class:'content container', id:'help', ->
   h2 'Help contents go here.'
 
-if @user
-  div class:'content container', id:'playlists', ->
-    ###
-    div class:'span5', ->
-      legend ->
-        text 'Your Grooveshark Playlists'
-      i class:'icon-refresh animooted'
-      ul id:'gs_playlists_list', class:'playlists_list'
-    ###
+div class:'content container', id:'playlists', ->
+  ###
+  div class:'span5', ->
     legend ->
-      text 'Your Playlists'
-      a href:'#/new_playlist', class:'btn btn-clear', ->
-        i class:'icon-plus icon-white'
-    i class:'icon-refresh icon-white animooted'
-    ul id:'xspf_playlists_list', class:'playlists_list'
+      text 'Your Grooveshark Playlists'
+    i class:'icon-refresh animooted'
+    ul id:'gs_playlists_list', class:'playlists_list'
+  ###
+  legend ->
+    text 'Your Playlists'
+    a href:'#/new_playlist', class:'btn btn-clear', ->
+      i class:'icon-plus icon-white'
+  i class:'icon-refresh icon-white animooted'
+  ul id:'xspf_playlists_list', class:'playlists_list'
 
 
 div id:'playlist_loading', class:'content container', ->
@@ -206,7 +205,6 @@ coffeescript ->
               cls += ' verified'
             i class:cls
 
-
       @extension = @extension or {}
       songs = @extension[gs_songs_rel]
       if not songs?
@@ -359,6 +357,18 @@ coffeescript ->
       span id:'playlist_creator', contenteditable:'true', spellcheck:'false', @creator
 
     $ ->
+      update_username = (username) ->
+        $('.username-display').text username
+        if username? and username != ''
+          $('#show_login_form').hide()
+          $('#log-in').hide()
+          $('#log-out').show()
+        else
+          $('#show_login_form').show()
+          $('#log-out').hide()
+
+      update_username($('#username').val())
+
       addMsg = (msg) ->
         ###
         if not msg.transient
@@ -394,13 +404,49 @@ coffeescript ->
         $('#log-in input').first().focus()
         return false
 
-      $('#log-in').submit ->
-        setTimeout =>
-          $(@).find('button').button 'loading'
-          $(@).find('input').attr 'disabled', 'disabled'
-        , 0
-        return true
+      $('#log-in').submit (e) ->
+        e.preventDefault()
 
+        $(@).find('button').button 'loading'
+        $(@).find('input').attr 'disabled', 'disabled'
+
+        $.ajax
+          type: 'POST'
+          url: '/login'
+          data:
+            username: $('#log-in-username').val()
+            password: $('#log-in-pass').val()
+        .success (data) =>
+          console.log data
+          update_username($('#log-in-username').val())
+        .error (data) =>
+          console.log data
+          $(@).parent().show()
+        .complete =>
+          $(@).find('button').button 'reset'
+          $(@).find('input').val('').attr 'disabled', false
+
+        return false
+
+      $('#log-out').submit (e) ->
+        e.preventDefault()
+
+        $(@).find('button').button 'loading'
+        $(@).find('input').attr 'disabled', 'disabled'
+
+        $.ajax
+          type: 'POST'
+          url: '/logout'
+        .success (data) =>
+          update_username('')
+          app.setLocation '#/'
+          $('#xspf_playlists_list').html ''
+        .error (data) =>
+          $(@).parent().show()
+        .complete =>
+          $(@).find('button').button 'reset'
+
+        return false
 
       $.fn.transitionContent = (ms) ->
         ms = ms or 250

@@ -10,7 +10,7 @@ html ->
               minimum-scale=0.75; 
               user-scalable=no;'''
     meta name:'apple-mobile-web-app-capable', content:'yes'
-    title @title
+    title 'Spiffyshark: Better Grooveshark Playlists'
 
     link rel:'stylesheet', href:'bootstrap/css/bootstrap.css'
     link rel:'stylesheet', href:'bootstrap/css/bootstrap-responsive.css'
@@ -21,7 +21,11 @@ html ->
 
   body ->
     if @user
-      input id:'username', type:'hidden', value:''+@user.name
+      username = @user.name
+    else
+      username = ''
+
+    input id:'username', type:'hidden', value:username
     div id:'top', ->
       div class:'navbar container', ->
         div class:'navbar-inner', ->
@@ -31,51 +35,51 @@ html ->
             a href:'#/playlists', 'playlists'
 
           div id:'account-nav-container', ->
-            if not @user
-              div class:'navbar-text pull-right', ->
-                a id:'show_login_form', href:'#', 'Log In'
-              form
-                class:'navbar-form pull-right'
-                id:'log-in'
-                action:'login'
-                method:'post'
-              , ->
-                input
-                  id:'log-in-username'
-                  autocomplete:'false'
-                  name:'username'
-                  placeholder:'Grooveshark Username'
-                  type:'text'
-                  class:'span2'
-                text '&nbsp;'
-                input
-                  id:'log-in-pass'
-                  name:'password'
-                  placeholder:'Password'
-                  type:'password'
-                  class:'span2'
-                text '&nbsp;'
-                button type:'submit', class:'btn btn-primary pull-right', 'Log In'
+            div class:'navbar-text pull-right', ->
+              a id:'show_login_form', href:'#', 'Log In'
+            form
+              class:'navbar-form pull-right'
+              id:'log-in'
+              action:'login'
+              method:'post'
+            , ->
+              input
+                id:'log-in-username'
+                autocomplete:'false'
+                name:'username'
+                placeholder:'Grooveshark Username'
+                type:'text'
+                class:'span2'
+              text '&nbsp;'
+              input
+                id:'log-in-pass'
+                name:'password'
+                placeholder:'Password'
+                type:'password'
+                class:'span2'
+              text '&nbsp;'
+              button type:'submit', class:'btn btn-primary pull-right', 'Log In'
 
-            if @user
-              form
-                action:'logout'
-                method:'post'
-                class:'navbar-form pull-right'
+            form
+              id:'log-out'
+              action:'logout'
+              method:'post'
+              class:'navbar-form pull-right'
+            , ->
+              a
+                id:'user_button'
+                href:'#/playlists'
+                class:'btn btn-clear'
               , ->
-                a
-                  id:'user_button'
-                  href:'#/playlists'
-                  class:'btn btn-clear'
-                , ->
-                  i class:'icon-white icon-user'
-                  span id:'username-display', " #{@user.name}"
-                text '&nbsp;'
-                button
-                  id:'log-out'
-                  class:'btn btn-clear'
-                  type:'submit'
-                , 'Log Out'
+                i class:'icon-white icon-user'
+                text ' '
+                span class:'username-display', username
+              text '&nbsp;'
+              button
+                id:'log-out-button'
+                class:'btn btn-clear'
+                type:'submit'
+              , 'Log Out'
       div class:'container', ->
         div class:'row', ->
           div id:'msgs', class:'errors_list'

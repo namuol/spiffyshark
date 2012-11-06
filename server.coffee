@@ -208,9 +208,9 @@ zappa.run config.port, ->
   
   saveGSPlaylist = (cb) ->
     # Basic playlist validation:
-    if not (@body.jspf? and @body.jspf.playlist? and @body.jspf.playlist.track?)
-      console.err 'Bad playlist body:'
-      console.err @body
+    if not (@body.jspf? and @body.jspf.playlist?)
+      console.error 'Bad playlist body:'
+      console.error @body
       @send
         okay: false
         err:
@@ -219,6 +219,7 @@ zappa.run config.port, ->
       return
     
     @body.jspf.playlist.extension = @body.jspf.playlist.extension or {}
+    @body.jspf.playlist.track = @body.jspf.playlist.track or []
 
     if @request.session.user
       client = getClient(@request).gs
@@ -264,11 +265,15 @@ zappa.run config.port, ->
     client = new GroovesharkClient config.grooveshark_key, config.grooveshark_secret
     client.authenticate @body.username, @body.password, (err, status, body) =>
       return if handle_errors @request, @response, err, status
+      
+      console.log client
 
       if not client.authenticated
-        @request.session.errors.push
-          msg: 'Wrong username/password combination.'
-        @redirect @body.redirect or '/'
+        @send
+          err:
+            msg: 'Wrong username/password combination.'
+        , 403
+        return
       else
         @request.session.user =
           id: body.UserID
@@ -291,14 +296,18 @@ zappa.run config.port, ->
               if not handle_errors @request, @response, body, res.statusCode
                 @request.session.user.ptoken = body.sessionToken
                 @request.session.user.pid = body.objectId
-              @redirect @body.redirect or '/'
+              @send
+                okay: true
+              , 200
           else
             parse.loginUser @body.username, config.parse_user_password
             , (err, res, body, success) =>
               if not handle_errors @request, @response, body, res.statusCode
                 @request.session.user.ptoken = body.sessionToken
                 @request.session.user.pid = body.objectId
-              @redirect @body.redirect or '/'
+              @send
+                okay: true
+              , 200
 
 
   @post '/logout', -> requiresLogin @request, @response, =>
@@ -309,7 +318,9 @@ zappa.run config.port, ->
         delete clients[@request.session.user.id]
 
         @request.session.user = null
-        @redirect @body.redirect or '/'
+        @send
+          okay: true
+        , 200
 
   @post '/playlist', ->
     file = @request.files.file
