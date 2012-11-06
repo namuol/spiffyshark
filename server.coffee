@@ -106,7 +106,7 @@ zappa.run config.port, ->
     searchQueue.drain = ->
       setupSearchQueue()
 
-    searchQueue.rateLimit 50
+    searchQueue.rateLimit config.gs_search_ratelimit_ms
 
   setupUrlQueue = ->
     urlQueue = async.queue (task, cb) ->
@@ -117,7 +117,7 @@ zappa.run config.port, ->
     urlQueue.drain = ->
       setupUrlQueue()
 
-    urlQueue.rateLimit 150
+    urlQueue.rateLimit config.gs_url_ratelimit_ms
   
   setupSearchQueue()
   setupUrlQueue()
@@ -209,7 +209,8 @@ zappa.run config.port, ->
   saveGSPlaylist = (cb) ->
     # Basic playlist validation:
     if not (@body.jspf? and @body.jspf.playlist? and @body.jspf.playlist.track?)
-      console.log @body
+      console.err 'Bad playlist body:'
+      console.err @body
       @send
         okay: false
         err:
@@ -253,11 +254,10 @@ zappa.run config.port, ->
     else
       # Create new playlist
       client.request 'createPlaylist',
-        name: @body.gs_playlist.name
-        songIDs: @body.gs_playlist.tracks
+        name: @body.gs_playlist.name or 'Untitled'
+        songIDs: @body.gs_playlist.tracks or []
       , (err, status, gs_body) =>
         return if handle_errors @request, @response, err, status
-        console.log gs_body
         getURL gs_body
 
   @post '/login', ->
@@ -328,6 +328,10 @@ zappa.run config.port, ->
       headers =
         'x-amz-acl': 'public-read'
         'Content-Type': 'application/json'
+        'x-amz-meta-title': jspf.playlist.title
+        'x-amz-meta-creator': jspf.playlist.creator
+        'x-amz-meta-track-count': ''+jspf.playlist.track.length or '0'
+
       id = shortid.generate()
       if @request.session.user
         s3Path = '/'+@request.session.user.name+'/'+id
@@ -367,15 +371,20 @@ zappa.run config.port, ->
 
   
   saveFile = (buffer, s3Path, id) ->
-    title = @body.jspf.playlist.title or ''
-    creator = @body.jspf.playlist.creator or ''
-    track_count = @body.jspf.playlist.track.length
     gs_url = @body.jspf.playlist.extension[config.gs_playlist_rel][0].url
     gs_id = @body.jspf.playlist.extension[config.gs_playlist_rel][0].id
+    creator = @body.jspf.playlist.creator
+    title = @body.jspf.playlist.title
+    track_count = @body.jspf.playlist.track.length
 
     req = s3.putBuffer buffer, s3Path,
       'Content-Length': buffer.length
       'Content-Type': 'application/json'
+      'x-amz-meta-title': title
+      'x-amz-meta-creator': creator
+      'x-amz-meta-track-count': ''+track_count or '0'
+      'x-amz-meta-gs-url': gs_url
+      'x-amz-meta-gs-id': gs_id
     , (err={message:'Unexpected Error'}, res={}) =>
 
       if (res.statusCode >= 300) or (res.statusCode < 200)
@@ -387,7 +396,6 @@ zappa.run config.port, ->
         return
 
       if not @request.session.user?
-        console.log @body.jspf.playlist.extension
         @send
           okay: true
           gs_url: gs_url
@@ -395,48 +403,66 @@ zappa.run config.port, ->
           id: id
         , 200
       else
-        found = false
-        parse.getUser @request.session.user.pid, (err, res, user, success) =>
-          return if handle_errors @request, @response, user, res.statusCode
-          for file in user.playlists
-            if file.id is id
-              file.title = title
-              file.creator = creator
-              file.track_count = track_count
-              found = true
-              parse.sessionToken = @request.session.user.ptoken
-              parse.updateUser @request.session.user.pid,
-                playlists: user.playlists
-              , (err, res, body, success) =>
-                return if handle_errors @request, @response, body, res.statusCode
-                @send
-                  okay: true
-                  gs_url: gs_url
-                  gs_id: gs_id
-                  id: id
-                , 200
-                return
-          if not found
-            @body.jspf.playlist.track = @body.jspf.playlist.track or []
+        updateParseUserPlaylists.call @, [{
+          creator: creator
+          title: title
+          track_count: track_count
+          gs_url: gs_url
+          gs_id: gs_id
+          id: id
+        }], (err) =>
+          return if handle_errors @request, @response, err, res.statusCode
+          @send
+            okay: true
+            gs_url: gs_url
+            gs_id: gs_id
+            id: id
+          , 200
+
+  updateParseUserPlaylists = (playlists, cb) ->
+    found = false
+
+    parse.getUser @request.session.user.pid, (err, res, user, success) =>
+      return if handle_errors @request, @response, user, res.statusCode
+      async.forEachLimit playlists, 5, (playlist, p_cb) =>
+        for file in user.playlists
+          if file.id is playlist.id
+            file.title = playlist.title
+            file.creator = playlist.creator
+            file.track_count = playlist.track_count
+            found = true
             parse.sessionToken = @request.session.user.ptoken
             parse.updateUser @request.session.user.pid,
-              playlists:
-                __op: 'Add'
-                objects: [
-                  title: title
-                  creator: creator
-                  track_count: @body.jspf.playlist.track.length
-                  id: id
-                ]
+              playlists: user.playlists
             , (err, res, body, success) =>
-              return if handle_errors @request, @response, body, res.statusCode
-              @send
-                okay: true
-                gs_url: gs_url
-                gs_id: gs_id
-                id: id
-              , 200
-              return
+              if err?
+                p_cb
+                  err:
+                    msg: "Unexpected error saving playlist \"#{file.creator} - #{file.title}\""
+              else
+                p_cb null
+        if not found
+          @body.jspf.playlist.track = @body.jspf.playlist.track or []
+          parse.sessionToken = @request.session.user.ptoken
+          parse.updateUser @request.session.user.pid,
+            playlists:
+              __op: 'Add'
+              objects: [
+                title: playlist.title
+                creator: playlist.creator
+                track_count: playlist.track_count
+                id: playlist.id
+              ]
+          , (err, res, body, success) =>
+            if err?
+              p_cb
+                err:
+                  msg: "Unexpected error saving playlist \"#{file.creator} - #{file.title}\""
+
+            p_cb null
+      , (err) =>
+        return if handle_errors @request, @response, user, res.statusCode
+        cb null
 
   @post '/new_playlist', ->
     saveGSPlaylist.call @, =>
@@ -468,6 +494,7 @@ zappa.run config.port, ->
       else
         s3Path = '/!/'+id
 
+      ###
       s3.headFile s3Path, (err, res) =>
         if res.statusCode != 200
           @send
@@ -476,70 +503,97 @@ zappa.run config.port, ->
               msg: 'That playlist does not exist (has it expired?) or you do not have permission to overwrite it.'
           , 403
           return
+      ###
+      json = JSON.stringify @body.jspf
+      buffer = new Buffer json
 
-        json = JSON.stringify @body.jspf
-        buffer = new Buffer json
-
-        saveFile.call @, buffer, s3Path, id
+      saveFile.call @, buffer, s3Path, id
 
   @del '/playlist/:id', -> requiresLogin @request, @response, =>
     s3Path = '/'+@request.session.user.name+'/'+@params.id
 
-    s3.deleteFile s3Path, (err, res) =>
-      if (res.statusCode != 404) and ((res.statusCode >= 300) or (res.statusCode < 200))
-        @send
-          okay: false
-          err:
-            msg: 'Unexpected problem deleting your playlist!'
-        , 500
-        return
-      parse.getUser @request.session.user.pid, (err, res, user, success) =>
-        return if handle_errors @request, @response, user, res.statusCode
-        i=0
-        found = false
-        for file in user.playlists
-          console.log file
-          if file.id != @params.id
-            ++i
-          else
-            found = true
-            user.playlists.remove i
-            parse.sessionToken = @request.session.user.ptoken
-            parse.updateUser @request.session.user.pid,
-              playlists: user.playlists
-            , (err, res, body, success) =>
-              return if handle_errors @request, @response, body, res.statusCode
-              @send
-                okay: true
-              , 200
-              return
-        if not found
-          # Maybe they hit delete twice, somehow?
+    s3.headFile s3Path, (err, res) =>
+      gs_id = res.headers['x-amz-meta-gs-id']
+
+      if gs_id?
+        if @request.session.user
+          client = getClient(@request).gs
+        else
+          client = gs_noauth
+
+        client.request 'deletePlaylist',
+          playlistID: gs_id
+        , ->
+          # Do nothing. If there was an error, oh well.
+
+      s3.deleteFile s3Path, (err, res) =>
+        if (res.statusCode != 404) and ((res.statusCode >= 300) or (res.statusCode < 200))
           @send
-            okay: true
-          , 200
+            okay: false
+            err:
+              msg: 'Unexpected problem deleting your playlist!'
+          , 500
+          return
+        parse.getUser @request.session.user.pid, (err, res, user, success) =>
+          return if handle_errors @request, @response, user, res.statusCode
+          i=0
+          found = false
+          for file in user.playlists
+            if file.id != @params.id
+              ++i
+            else
+              found = true
+              user.playlists.remove i
+              parse.sessionToken = @request.session.user.ptoken
+              parse.updateUser @request.session.user.pid,
+                playlists: user.playlists
+              , (err, res, body, success) =>
+                return if handle_errors @request, @response, body, res.statusCode
+                @send
+                  okay: true
+                , 200
+                return
+          if not found
+            # Maybe they hit delete twice, somehow?
+            @send
+              okay: true
+            , 200
 
   @get '/playlist/:id', ->
+    anonPath = '/!/'+@params.id
     if @request.session.user
-      s3Path = '/'+@request.session.user.name+'/'+@params.id
+      path = '/'+@request.session.user.name+'/'+@params.id
     else
-      s3Path = '/!/'+@params.id
+      path = anonPath
 
-    s3.headFile s3Path, (err, res) =>
+    s3.headFile path, (err, res) =>
       if res.statusCode != 200
-        @send
-          okay: false
-          err:
-            msg: 'That playlist does not exist (has it expired?).'
-        , 403
-        return
+        if @request.session.user
+          path = anonPath
+        else
+          @send
+            okay: false
+            err:
+              msg: 'That playlist does not exist (has it expired?).'
+          , 403
+          return
 
       buffer = ''
-      req = s3.getFile s3Path, (err, res) =>
-        return if handle_errors @request, @response, err, 500
+      req = s3.getFile path, (err, res) =>
+        if res.statusCode != 200
+          @send
+            okay: false
+            err:
+              msg: 'That playlist does not exist (has it expired?).'
+          , 403
+          return
+
         res.setEncoding 'utf8'
         res.on 'data', (chunk) -> buffer += chunk
         res.on 'end', (a, b, c) =>
+          if path is anonPath
+            @response.set 'NotYours', 'true'
+
           for own k,v of res.headers
             @response.set k, v
           @send buffer

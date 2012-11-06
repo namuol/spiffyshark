@@ -62,7 +62,9 @@ button
   text-shadow 0 1px 0 black
   text-transform lowercase
   font-size 25%
-  top -20px
+  top -30px
+  display inline-block
+  width 0
 
 #new_playlist_options_wrapper
   text-align center
@@ -121,8 +123,27 @@ button
   background url(64_search.png) 15px 45px no-repeat rgba(0,0,0,0.3)
 
 #import
+  position relative
   background url(64_upload.png) 15px 45px no-repeat rgba(0,0,0,0.3)
   margin-right 0 !important
+  overflow hidden
+
+#import > form
+  position absolute
+  top 0
+  left 0
+
+#import input[type=file]
+  position absolute
+  top 0
+  left 0
+  font-size 9999px
+  width 1000px
+  height 1000px
+  opacity 0
+
+#import *
+  cursor pointer
 
 #new_playlist_options > .option:hover,
 #new_playlist_options > .option.focus

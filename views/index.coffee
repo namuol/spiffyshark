@@ -10,6 +10,8 @@ div class:'content container', id:'main', ->
       div id:'import', class:'row option', ->
         legend 'Import'
         p '...your playlist file'
+        form id:'upload', enctype:'multipart/form-data', action:'#/upload_playlist', method:'post', ->
+          input type:'file'
 
 div class:'content container', id:'help', ->
   h2 'Help contents go here.'
@@ -35,7 +37,7 @@ div id:'playlist_loading', class:'content container', ->
   i class:'icon-refresh icon-white animooted'
   text ' Loading Playlist...'
 
-div class:'content container', id:'playlist', ->
+div class:'content', id:'playlist', ->
   div class:'row', ->
     legend ''
 
@@ -667,7 +669,6 @@ coffeescript ->
             $('#del_song').attr 'disabled', 'disabled'
 
         $('#playlist_items tr td').live 'click', (e) ->
-          console.log 'click'
           $(@).parent().toggleClass 'selected'
           update_del_song_button()
 
@@ -781,7 +782,9 @@ coffeescript ->
           getSong $(window.selectedRow).index(), null, true
           return false
 
-        $('.uploaded_playlist button.editTrack').live 'click', ->
+        $('.uploaded_playlist button.editTrack').live 'click', (e) ->
+          e.stopPropagation()
+
           window.selectedRow = $(@).parent().parent()[0]
           i = $(selectedRow).index()
           song = jspf.playlist.track[i]
@@ -803,6 +806,7 @@ coffeescript ->
           $('#playlist_items').sortable 'refresh'
           window.selectedRow = $('.uploaded_playlist tbody tr')[i]
           getSong $(window.selectedRow).index(), null, true
+          update_del_song_button()
           playlistDirtied()
         
         $('#song_modal form').live 'submit', (e) ->
@@ -825,6 +829,7 @@ coffeescript ->
           $(window.selectedRow).replaceWith playlist_row_template index:i, track:track
           $('#playlist_items').sortable 'refresh'
           window.selectedRow = $('.uploaded_playlist tbody tr')[i]
+          update_del_song_button()
           playlistDirtied()
 
           return false
@@ -858,7 +863,6 @@ coffeescript ->
                   gs_playlist.tracks.push song.SongID
                   break
           to_save.playlist.extension = to_save.playlist.extension or {}
-          console.log to_save
 
           setTimeout ->
             $.ajax
@@ -869,7 +873,6 @@ coffeescript ->
                 gs_playlist: gs_playlist
                 jspf: to_save
             .success (data) =>
-              console.log data
               playlistSaved()
               playlist_id = data.id
               jspf.playlist.extension[gs_playlist_rel] = [{
@@ -882,7 +885,6 @@ coffeescript ->
           , 200
 
         playlist_loaded = ->
-          console.log jspf
 
           #=====================
           # Found here: http://stackoverflow.com/questions/1307705/jquery-ui-sortable-with-table-and-tr-width/1372954#1372954
@@ -903,6 +905,7 @@ coffeescript ->
           drag_item = undefined
           
           $('table tbody').sortable
+            distance: 20
             helper: tableDragHelper
             start: (e, ui) ->
               row_deleted = false
@@ -955,19 +958,19 @@ coffeescript ->
               playlistDirtied()
             $(@).attr 'disabled','disabled'
 
-        new_playlist =
-          playlist:
-            creator: 'Anonymous'
-            title: 'New Playlist'
-            info: 'http://spiffyshark.com'
-            track: []
-            extension: {}
-
         @get '#/search', ->
           $('#album_search_modal').modal()
           @redirect '#/new_playlist'
 
         @get '#/new_playlist', ->
+          new_playlist =
+            playlist:
+              creator: 'Anonymous'
+              title: 'New Playlist'
+              info: 'http://spiffyshark.com'
+              track: []
+              extension: {}
+
           playlist_id = null
           $('.nav .active').removeClass 'active'
           $('.nav [href="#/help"]').parent().addClass 'active'
@@ -976,6 +979,7 @@ coffeescript ->
           $('#save_playlist').button('reset').attr('disabled','disabled')
           $('#playlist_items').html ''
           jspf = $.extend true, new_playlist, {}
+
           jspf.playlist.creator = $('#username').val() or 'Anonymous'
           $('#playlist legend').html playlist_legend_template jspf.playlist
 
@@ -1065,6 +1069,14 @@ coffeescript ->
             playlist_loaded()
 
             expires = xhr.getResponseHeader 'Expires'
+            not_yours = xhr.getResponseHeader 'NotYours'
+
+            if not_yours
+              # Delete GS playlist info so when it is saved, it creates
+              #  a new playlist instead of trying to overwrite the anonymous
+              #  playlist.
+              delete jspf.playlist.extension[gs_playlist_rel]
+              playlist_id = null
 
             if expires
               addMsg
@@ -1078,11 +1090,15 @@ coffeescript ->
                   <li>Export your playlist files to Grooveshark playlists.
                 </ul>
                 """
+            console.log jspf
 
           .error (xhr, err, thrown) =>
             $('#playlist').hide()
             $('#playlist_loading').hide()
             app.setLocation '#/'
+
+        $('#upload input[type=file]').change ->
+          $('#upload').submit()
 
         @post '#/upload_playlist', ->
           file = $('#upload input[type=file]')[0].files[0]
