@@ -27,6 +27,12 @@ gs_noauth.authenticate config.gs_anon_acct, config.gs_anon_password, (err, statu
   if err
     throw err
   console.log 'Logged in as ' + config.gs_anon_acct
+  ###
+  gs_noauth.request 'getServiceDescription', {}, (err, status, body) =>
+    for own k,v of body.methods
+      console.log k
+      console.log ' ' + v.description
+  ###
 
 parse = new Parse config.parse_app_id, config.parse_rest_key
 s3 = knox.createClient
@@ -86,6 +92,8 @@ zappa.run config.port, ->
       if not req.session.errors
         req.session.errors = []
       next()
+
+  @enable 'minify'
 
   @get '/', ->
     @render 'index',
@@ -193,8 +201,6 @@ zappa.run config.port, ->
         
         @ack gs_body
 
-
-
   @get '/playlists', -> requiresLogin @request, @response, =>
     client = getClient @request
     client.gs.request 'getUserPlaylists', {}, (err, status, gs_body) =>
@@ -266,8 +272,6 @@ zappa.run config.port, ->
     client.authenticate @body.username, @body.password, (err, status, body) =>
       return if handle_errors @request, @response, err, status
       
-      console.log client
-
       if not client.authenticated
         @send
           err:
@@ -564,6 +568,7 @@ zappa.run config.port, ->
                   okay: true
                 , 200
                 return
+              break
           if not found
             # Maybe they hit delete twice, somehow?
             @send

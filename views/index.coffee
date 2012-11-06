@@ -9,7 +9,10 @@ div class:'content container', id:'main', ->
         p '...for your favorite album'
       div id:'import', class:'row option', ->
         legend 'Import'
-        p '...your playlist file'
+        p ->
+          text '...your playlist file ('
+          a href:'//xspf.org', target:'_blank', 'xspf'
+          text ')'
         form id:'upload', enctype:'multipart/form-data', action:'#/upload_playlist', method:'post', ->
           input type:'file'
 
@@ -28,7 +31,6 @@ div class:'content container', id:'playlists', ->
     text 'Your Playlists'
     a href:'#/new_playlist', class:'btn btn-clear', ->
       i class:'icon-plus icon-white'
-  i class:'icon-refresh icon-white animooted'
   ul id:'xspf_playlists_list', class:'playlists_list'
 
 
@@ -357,13 +359,16 @@ coffeescript ->
       span id:'playlist_creator', contenteditable:'true', spellcheck:'false', @creator
 
     $ ->
+      logged_in = false
       update_username = (username) ->
         $('.username-display').text username
         if username? and username != ''
+          logged_in = true
           $('#show_login_form').hide()
           $('#log-in').hide()
           $('#log-out').show()
         else
+          logged_in = false
           $('#show_login_form').show()
           $('#log-out').hide()
 
@@ -403,6 +408,7 @@ coffeescript ->
         $('#log-in').show()
         $('#log-in input').first().focus()
         return false
+      
 
       $('#log-in').submit (e) ->
         e.preventDefault()
@@ -599,8 +605,6 @@ coffeescript ->
         previousLocation = null
         confirmDialogShown = false
         @before {}, ->
-          $('.navbar .brand').show()
-
           if confirmDialogShown
             confirmDialogShown = false
             return true
@@ -925,6 +929,21 @@ coffeescript ->
                 id: data.gs_id
                 url: data.gs_url
               }]
+
+              if not logged_in
+                try
+                  local_playlists = JSON.parse localStorage.getItem 'playlists'
+                catch e
+                  local_playlists = {}
+
+                local_playlists[playlist_id] =
+                  id: playlist_id
+                  track_count: jspf.playlist.track.length
+                  title: jspf.playlist.title
+                  creator: jspf.playlist.creator
+
+                localStorage.setItem 'playlists', JSON.stringify local_playlists
+
               app.setLocation '#/playlist/' + data.id
             .error (xhr, err, thrown) =>
               playlistDirtied()
@@ -1009,6 +1028,9 @@ coffeescript ->
           @redirect '#/new_playlist'
 
         @get '#/new_playlist', ->
+          if confirmDialogShown
+            return
+
           new_playlist =
             playlist:
               creator: 'Anonymous'
@@ -1053,17 +1075,24 @@ coffeescript ->
           $('.content').hide()
           $('#playlists').show()
 
-          $.getJSON('/playlists')
-            .success (data) ->
-              $('#xspf_playlists_list').html ''
-              for p in data.gs.playlists
-                $('#gs_playlists_list').append gs_playlist_row_template p
-              $('#xspf_playlists_list').html ''
-              for p in data.xspf.playlists
-                $('#xspf_playlists_list').append xspf_playlist_row_template p
-            .complete ->
-              $('#playlists .animooted').remove()
+          if logged_in
+            $.getJSON('/playlists')
+              .success (data) ->
+                $('#xspf_playlists_list').html ''
+                for p in data.gs.playlists
+                  $('#gs_playlists_list').append gs_playlist_row_template p
+                $('#xspf_playlists_list').html ''
+                for p in data.xspf.playlists
+                  $('#xspf_playlists_list').append xspf_playlist_row_template p
+              .complete ->
+                $('#playlists .animooted').remove()
+          try
+            local_playlists = JSON.parse localStorage.getItem 'playlists'
+          catch e
+            local_playlists = {}
 
+          for own id,p in local_playlists
+            $('#xspf_playlists_list').append xspf_playlist_row_template p
 
         @get '#/playlist/:id', ->
           if playlist_id is @params.id

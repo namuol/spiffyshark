@@ -58,7 +58,7 @@ html ->
                 type:'password'
                 class:'span2'
               text '&nbsp;'
-              button type:'submit', class:'btn btn-primary pull-right', 'Log In'
+              button type:'submit', class:'btn btn-clear pull-right', 'Log In'
 
             form
               id:'log-out'
