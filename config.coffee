@@ -10,3 +10,6 @@ module.exports =
   aws_access_key: 'YOUR_AWS_ACCESS_KEY'
   aws_secret: 'YOUR_AWS_SECRET'
   aws_s3_bucket: 'YOUR_AWS_BUCKET'
+  gs_playlist_rel: 'p'
+  gs_search_ratelimit_ms: 100
+  gs_url_ratelimit_ms: 150
