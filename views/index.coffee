@@ -989,7 +989,7 @@ coffeescript ->
           $('#save_playlist').attr 'disabled', 'disabled'
 
         @get '#/', ->
-          $('.navbar .brand').hide()
+          #$('.navbar .brand').hide()
           $('.nav .active').removeClass 'active'
           $('.content').hide()
           $('#main').show()
