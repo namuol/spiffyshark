@@ -35,7 +35,7 @@ html ->
             a href:'#/playlists', 'playlists'
 
           div id:'account-nav-container', ->
-            div class:'navbar-text pull-right', ->
+            div class:'logged-out navbar-text pull-right', ->
               a id:'show_login_form', href:'#', 'Log In'
             form
               class:'navbar-form pull-right'
@@ -43,22 +43,23 @@ html ->
               action:'login'
               method:'post'
             , ->
-              input
-                id:'log-in-username'
-                autocomplete:'false'
-                name:'username'
-                placeholder:'Grooveshark Username'
-                type:'text'
-                class:'span2'
-              text '&nbsp;'
-              input
-                id:'log-in-pass'
-                name:'password'
-                placeholder:'Password'
-                type:'password'
-                class:'span2'
-              text '&nbsp;'
-              button type:'submit', class:'btn btn-clear pull-right', 'Log In'
+              div class:'logged-out', ->
+                input
+                  id:'log-in-username'
+                  autocomplete:'false'
+                  name:'username'
+                  placeholder:'Grooveshark Username'
+                  type:'text'
+                  class:'span2'
+                text '&nbsp;'
+                input
+                  id:'log-in-pass'
+                  name:'password'
+                  placeholder:'Password'
+                  type:'password'
+                  class:'span2'
+                text '&nbsp;'
+                button type:'submit', class:'btn btn-clear pull-right', 'Log In'
 
             form
               id:'log-out'
@@ -66,20 +67,21 @@ html ->
               method:'post'
               class:'navbar-form pull-right'
             , ->
-              a
-                id:'user_button'
-                href:'#/playlists'
-                class:'btn btn-clear'
-              , ->
-                i class:'icon-white icon-user'
-                text ' '
-                span class:'username-display', username
-              text '&nbsp;'
-              button
-                id:'log-out-button'
-                class:'btn btn-clear'
-                type:'submit'
-              , 'Log Out'
+              div class:'logged-in', ->
+                a
+                  id:'user_button'
+                  href:'#/playlists'
+                  class:'btn btn-clear'
+                , ->
+                  i class:'icon-white icon-user'
+                  text ' '
+                  span class:'username-display', username
+                text '&nbsp;'
+                button
+                  id:'log-out-button'
+                  class:'btn btn-clear'
+                  type:'submit'
+                , 'Log Out'
       div class:'container', ->
         div class:'row', ->
           div id:'msgs', class:'errors_list'

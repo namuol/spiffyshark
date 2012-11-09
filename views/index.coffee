@@ -28,11 +28,15 @@ div class:'content container', id:'playlists', ->
     ul id:'gs_playlists_list', class:'playlists_list'
   ###
   legend ->
-    text 'Your Playlists'
+    span class:'logged-in', ->
+      span class:'username-display'
+      text '\'s '
+    text 'Playlists'
+    span class:'logged-out', ->
+      text ' From This Device'
     a href:'#/new_playlist', class:'btn btn-clear', ->
       i class:'icon-plus icon-white'
   ul id:'xspf_playlists_list', class:'playlists_list'
-
 
 div id:'playlist_loading', class:'content container', ->
   i class:'icon-refresh icon-white animooted'
@@ -332,10 +336,18 @@ coffeescript ->
         text @PlaylistName
 
     xspf_playlist_row_template = coffeecup.compile ->
-      li 'data-playlist-id':@id, ->
+      li 'data-playlist-id':@id, 'data-local':''+@local?, ->
         button 'data-id':''+@id, class:'del_playlist btn btn-clear', ->
           i class:'icon-trash icon-white'
         a href:'#/playlist/'+@id, ->
+          if @local
+            span
+              class:'label label-important pull-right',
+              rel:'tooltip'
+              'data-original-title':'Save this playlist when logged in to associate it with your Grooveshark account.'
+              'data-placement': 'left'
+            , -> 'Anonymous'
+            text ' '
           if @creator
             text @creator + ' - '
           text @title
@@ -364,13 +376,12 @@ coffeescript ->
         $('.username-display').text username
         if username? and username != ''
           logged_in = true
-          $('#show_login_form').hide()
-          $('#log-in').hide()
-          $('#log-out').show()
+          $('.logged-out').hide()
+          $('.logged-in').show()
         else
           logged_in = false
-          $('#show_login_form').show()
-          $('#log-out').hide()
+          $('.logged-in').hide()
+          $('.logged-out').show()
 
       update_username($('#username').val())
 
@@ -382,6 +393,19 @@ coffeescript ->
           localStorage.setItem 'messages', JSON.stringify messages
         ###
         renderMsg msg
+
+      addExpiresMsg = (expires) ->
+        addMsg
+          transient: true
+          type: 'alert'
+          msg:"""Since you are not logged in, this playlist file expires <strong>#{moment(expires).fromNow()}</strong>.
+          <br/>
+          Log in with your Grooveshark account, and you can:
+          <ul>
+            <li>Keep your playlist files here permanently.
+            <li>Export your playlist files to Grooveshark playlists.
+          </ul>
+          """
 
       renderMsg = (msg) ->
         switch msg.type
@@ -408,7 +432,6 @@ coffeescript ->
         $('#log-in').show()
         $('#log-in input').first().focus()
         return false
-      
 
       $('#log-in').submit (e) ->
         e.preventDefault()
@@ -423,10 +446,8 @@ coffeescript ->
             username: $('#log-in-username').val()
             password: $('#log-in-pass').val()
         .success (data) =>
-          console.log data
           update_username($('#log-in-username').val())
         .error (data) =>
-          console.log data
           $(@).parent().show()
         .complete =>
           $(@).find('button').button 'reset'
@@ -453,48 +474,6 @@ coffeescript ->
           $(@).find('button').button 'reset'
 
         return false
-
-      $.fn.transitionContent = (ms) ->
-        ms = ms or 250
-        wrapper = $("<div>")
-        trans = "width " + ms + "ms ease-out"
-        el = this
-        wrapper.css
-          "-webkit-transition": trans
-          "-moz-transition": trans
-          "-o-transition": trans
-          transition: trans
-          width: el.css("width")
-          height: el.css("height")
-          margin: el.css('margin')
-          padding: el.css('padding')
-          background: "#f0f" # For debug
-        el.css 'margin', '0'
-        el.css 'padding', '0'
-
-        el.wrap wrapper
-        wrapper = el.parent()
-        el.css
-          width: "100%"
-          height: "100%"
-
-        el.each ->
-          @addEventListener "DOMSubtreeModified", (e) ->
-            clone = undefined
-            w = undefined
-            h = undefined
-            clone = el.clone().css(
-              width: ""
-              height: ""
-            ).hide().appendTo("body")
-            w = clone.css("width")
-            h = clone.css("height")
-            clone.remove()
-            wrapper.css
-              width: w
-              height: h
-        el
-      #$('button').transitionContent(5000)
 
       animooted = '<i class="icon-refresh animooted"></i>'
       animooted_white = '<i class="icon-refresh icon-white animooted"></i>'
@@ -769,6 +748,9 @@ coffeescript ->
               url: '/playlist/' + $(@).data 'id'
             .success (data) =>
               $(@).parent().remove()
+              local_playlists = JSON.parse localStorage.getItem 'playlists'
+              delete local_playlists[$(@).data('id')]
+              localStorage.setItem 'playlists', JSON.stringify local_playlists
             .error (data) =>
               $(@).parent().show()
 
@@ -915,7 +897,7 @@ coffeescript ->
           to_save.playlist.extension = to_save.playlist.extension or {}
 
           setTimeout ->
-            $.ajax
+            xhr = $.ajax
               type: type
               cache: false
               url: url
@@ -932,7 +914,7 @@ coffeescript ->
 
               if not logged_in
                 try
-                  local_playlists = JSON.parse localStorage.getItem 'playlists'
+                  local_playlists = JSON.parse localStorage.getItem('playlists') or {}
                 catch e
                   local_playlists = {}
 
@@ -943,6 +925,11 @@ coffeescript ->
                   creator: jspf.playlist.creator
 
                 localStorage.setItem 'playlists', JSON.stringify local_playlists
+
+              if url is '/new_playlist'
+                expires = xhr.getResponseHeader 'Expires'
+                if expires?
+                  addExpiresMsg expires
 
               app.setLocation '#/playlist/' + data.id
             .error (xhr, err, thrown) =>
@@ -1075,25 +1062,30 @@ coffeescript ->
           $('.content').hide()
           $('#playlists').show()
 
-          if logged_in
-            $.getJSON('/playlists')
-              .success (data) ->
-                $('#xspf_playlists_list').html ''
-                for p in data.gs.playlists
-                  $('#gs_playlists_list').append gs_playlist_row_template p
-                $('#xspf_playlists_list').html ''
-                for p in data.xspf.playlists
-                  $('#xspf_playlists_list').append xspf_playlist_row_template p
-              .complete ->
-                $('#playlists .animooted').remove()
+
           try
             local_playlists = JSON.parse localStorage.getItem 'playlists'
           catch e
             local_playlists = {}
+          for own id,p of local_playlists
+            p.local = true
+            if $('#xspf_playlists_list > li[data-playlist-id]').length is 0
+              $('#xspf_playlists_list').prepend xspf_playlist_row_template p
+          $('[rel=tooltip][data-original-title]').tooltip()
 
-          for own id,p in local_playlists
-            $('#xspf_playlists_list').append xspf_playlist_row_template p
-
+          if logged_in
+            $.getJSON('/playlists')
+              .success (data) ->
+                $('#xspf_playlists_list > li[data-local=false]').remove()
+                #$('#gs_playlists_list').html ''
+                #for p in data.gs.playlists
+                #  $('#gs_playlists_list').append gs_playlist_row_template p
+                for p in data.xspf.playlists
+                  $('#xspf_playlists_list').prepend xspf_playlist_row_template p
+              .complete ->
+                $('#playlists .animooted').remove()
+                $('[rel=tooltip][data-original-title]').tooltip()
+          
         @get '#/playlist/:id', ->
           if playlist_id is @params.id
             $('.nav .active').removeClass 'active'
@@ -1154,17 +1146,8 @@ coffeescript ->
               playlist_id = null
 
             if expires
-              addMsg
-                transient: true
-                type: 'alert'
-                msg:"""Since you are not logged in, this playlist file expires <strong>#{moment(expires).fromNow()}</strong>.
-                <br/>
-                Log in with your Grooveshark account, and you can:
-                <ul>
-                  <li>Keep your playlist files here permanently.
-                  <li>Export your playlist files to Grooveshark playlists.
-                </ul>
-                """
+              addExpiresMsg expires
+
             console.log jspf
 
           .error (xhr, err, thrown) =>
