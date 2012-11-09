@@ -102,7 +102,7 @@ div class:'content', id:'playlist', ->
     table class:'uploaded_playlist table table-condensed table-striped', ->
       thead ->
         tr ->
-          th ''
+          th colspan:'0', ''
           th 'Playlist Track (Search Terms)'
           th 'Grooveshark Track (Search Results)'
       tbody id:'playlist_items', ''
@@ -433,8 +433,26 @@ coffeescript ->
         $('#log-in input').first().focus()
         return false
 
+      hide_login = true
+      $('#log-in').live 'blur', (e) ->
+        hide_login = true
+        setTimeout =>
+          if hide_login
+            $(@).hide()
+            $('#show_login_form').show()
+        , 250
+
+      $('#log-in').live 'focus', (e) ->
+        hide_login = false
+        setTimeout =>
+          if hide_login
+            $('#show_login_form').hide()
+            $(@).show()
+        , 250
       $('#log-in').submit (e) ->
         e.preventDefault()
+
+        hide_login = false
 
         $(@).find('button').button 'loading'
         $(@).find('input').attr 'disabled', 'disabled'
@@ -468,7 +486,9 @@ coffeescript ->
           update_username('')
           app.setLocation '#/'
           $('#xspf_playlists_list').html ''
+          console.log 'wat'
         .error (data) =>
+          console.log 'wat2'
           $(@).parent().show()
         .complete =>
           $(@).find('button').button 'reset'

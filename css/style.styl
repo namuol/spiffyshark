@@ -42,6 +42,7 @@ button
   transition box-shadow 250ms ease-out, opacity 250ms ease-out
 
 .content
+  overflow-x hidden
   display none
 
 #top
@@ -100,10 +101,12 @@ button
   height 94px
   text-transform lowercase
   opacity 0.8
-  transition background-position 150ms, opacity 150ms, width 150ms, height 150ms
+  transition background 150ms, opacity 150ms, width 150ms, height 150ms, box-shadow 150ms
   text-align left
   width 400px
-  //text-shadow 0 1px 0 black
+  box-shadow 0 1px 1px rgba(0,0,0,0.4) inset
+  background-color rgba(0,0,0,0.2)
+  //text-shadow 0 1px 0px rgba(0,0,0,0.8)
   /*
   float left
   margin-right 10px
@@ -124,14 +127,14 @@ button
 */
 
 #create
-  background url(64_html.png) 15px 45px no-repeat rgba(0,0,0,0.3)
+  background url(64_html.png) 15px 45px no-repeat
 
 #search
-  background url(64_search.png) 15px 45px no-repeat rgba(0,0,0,0.3)
+  background url(64_search.png) 15px 45px no-repeat
 
 #import
   position relative
-  background url(64_upload.png) 15px 45px no-repeat rgba(0,0,0,0.3)
+  background url(64_upload.png) 15px 45px no-repeat
   margin-right 0 !important
   overflow hidden
 
@@ -158,6 +161,8 @@ button
   height 94px
   opacity 1
   background-position 15px 15px
+  background-color rgba(0,0,0,0.3)
+  box-shadow none//0 1px 1px rgba(0,0,0,0.5)
 
 #new_playlist_options > .option:hover > p,
 #new_playlist_options > .option.focus > p
@@ -222,10 +227,18 @@ button
   margin-top 3px
 
 body
-  background url(bg.jpg) center -20px no-repeat black
+  background url(bg.jpg) fixed center -20px no-repeat black
   font-family 'Open Sans', sans-serif
   color white
 //  padding-top 40px
+
+@media screen and (max-width: 705px)
+  body
+    padding 0
+    //overflow-x hidden
+
+  .navbar-inner
+    padding 0
 
 legend
   border 0
@@ -275,10 +288,6 @@ legend
   border-top 1px solid rgba(255,255,255,0.3)
   border-bottom 1px solid rgba(0,0,0,0.3)
 
-@media screen and (max-width: 705px)
-  #playlists > ul > li
-    font-size 15px
-
 #playlists > ul > li > a:hover
   text-decoration none
   color white
@@ -290,10 +299,23 @@ legend
   margin-bottom 0
   text-transform uppercase
   padding 0 10px
+  box-sizing border-box
 
 #playlists legend > .btn
   margin-top -2px
   margin-left 40px
+
+@media screen and (max-width: 705px)
+  #playlists > ul > li
+    font-size 15px
+
+  #playlists legend
+    width 100%
+
+  #playlists legend > .btn
+    float right
+    margin 0
+    margin-top 5px
 
 #playlist_loading
   padding-left 20px !important
@@ -415,6 +437,10 @@ button.add_album_tracks
   color black
   padding 0 10px
   margin-bottom 0
+
+@media screen and (max-width: 705px)
+  #playlist
+    border-radius 0
 
 #playlist_top_wrapper
   box-sizing border-box
@@ -554,6 +580,13 @@ button.editTrack
 
 #log-in input[type=text]:focus, #log-in input[type=password]:focus
   min-width 154px
+
+/*
+#log-in button[type=submit]
+  width 0
+  height 0
+  overflow hidden
+*/
 
 .playlist, .gs
   overflow hidden

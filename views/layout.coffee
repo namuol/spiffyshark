@@ -36,7 +36,7 @@ html ->
 
           div id:'account-nav-container', ->
             div class:'logged-out navbar-text pull-right', ->
-              a id:'show_login_form', href:'#', 'Log In'
+              button class:'btn btn-clear', id:'show_login_form', 'Log In'
             form
               class:'navbar-form pull-right'
               id:'log-in'
@@ -58,7 +58,7 @@ html ->
                   placeholder:'Password'
                   type:'password'
                   class:'span2'
-                text '&nbsp;'
+                #text '&nbsp;'
                 button type:'submit', class:'btn btn-clear pull-right', 'Log In'
 
             form
