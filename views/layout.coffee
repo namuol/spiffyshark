@@ -20,96 +20,109 @@ html ->
       window.scripts = []
 
   body ->
-    if @user
-      username = @user.name
-    else
-      username = ''
+    div id:'all', ->
+      if @user
+        username = @user.name
+      else
+        username = ''
 
-    input id:'username', type:'hidden', value:username
-    div id:'top', ->
-      div class:'navbar container', ->
-        div class:'navbar-inner', ->
-          span id:'breadcrumb', class:'brand', ->
-            a href:'#/', 'Spiffyshark'
-            span class:'divider', '/'
-            a href:'#/playlists', 'playlists'
+      input id:'username', type:'hidden', value:username
+      div id:'top', ->
+        div class:'navbar container', ->
+          div class:'navbar-inner', ->
+            span id:'breadcrumb', class:'brand', ->
+              a href:'#/', 'Spiffyshark'
+              span class:'divider', '/'
+              a href:'#/playlists', 'playlists'
 
-          div id:'account-nav-container', ->
-            div class:'logged-out navbar-text pull-right', ->
-              button class:'btn btn-clear', id:'show_login_form', 'Log In'
-            form
-              class:'navbar-form pull-right'
-              id:'log-in'
-              action:'login'
-              method:'post'
-            , ->
-              div class:'logged-out', ->
-                input
-                  id:'log-in-username'
-                  autocomplete:'false'
-                  name:'username'
-                  placeholder:'Grooveshark Username'
-                  type:'text'
-                  class:'span2'
-                text '&nbsp;'
-                input
-                  id:'log-in-pass'
-                  name:'password'
-                  placeholder:'Password'
-                  type:'password'
-                  class:'span2'
-                #text '&nbsp;'
-                button type:'submit', class:'btn btn-clear pull-right', 'Log In'
+            div id:'account-nav-container', ->
+              div class:'logged-out navbar-text pull-right', ->
+                button class:'btn btn-clear', id:'show_login_form', 'Log In'
+              form
+                class:'navbar-form pull-right'
+                id:'log-in'
+                action:'login'
+                method:'post'
+              , ->
+                div class:'logged-out', ->
+                  input
+                    id:'log-in-username'
+                    autocomplete:'false'
+                    name:'username'
+                    placeholder:'Grooveshark Username'
+                    type:'text'
+                    class:'span2'
+                  text '&nbsp;'
+                  input
+                    id:'log-in-pass'
+                    name:'password'
+                    placeholder:'Password'
+                    type:'password'
+                    class:'span2'
+                  #text '&nbsp;'
+                  button type:'submit', class:'btn btn-clear pull-right', 'Log In'
 
-            form
-              id:'log-out'
-              action:'logout'
-              method:'post'
-              class:'navbar-form pull-right'
-            , ->
-              div class:'logged-in', ->
-                a
-                  id:'user_button'
-                  href:'#/playlists'
-                  class:'btn btn-clear'
-                , ->
-                  i class:'icon-white icon-user'
-                  text ' '
-                  span class:'username-display', username
-                text '&nbsp;'
-                button
-                  id:'log-out-button'
-                  class:'btn btn-clear'
-                  type:'submit'
-                , 'Log Out'
-      div class:'container', ->
-        div class:'row', ->
-          div id:'msgs', class:'errors_list'
-          if @errors.length > 0
-            for err in @errors
-              div class:'alert alert-error fade in', 'data-debug-info':err.debug_info, ->
-                button type:'button', class:'close', 'data-dismiss':'alert', '×'
-                strong 'error: '
-                text err.msg
+              form
+                id:'log-out'
+                action:'logout'
+                method:'post'
+                class:'navbar-form pull-right'
+              , ->
+                div class:'logged-in', ->
+                  a
+                    id:'user_button'
+                    href:'#/playlists'
+                    class:'btn btn-clear'
+                  , ->
+                    i class:'icon-white icon-user'
+                    text ' '
+                    span class:'username-display', username
+                  text '&nbsp;'
+                  button
+                    id:'log-out-button'
+                    class:'btn btn-clear'
+                    type:'submit'
+                  , 'Log Out'
+        div class:'container', ->
+          div class:'row', ->
+            div id:'msgs', class:'errors_list'
+            if @errors.length > 0
+              for err in @errors
+                div class:'alert alert-error fade in', 'data-debug-info':err.debug_info, ->
+                  button type:'button', class:'close', 'data-dismiss':'alert', '×'
+                  strong 'error: '
+                  text err.msg
 
-      div id:'brand_row', class:'row content', ->
-        h1 id:'main_brand', ->
-          text 'Spiffyshark'
-          sup class:'alpha', ->
-            span
-              rel:'tooltip'
-              'data-original-title':'Very early preview; expect bugs!'
-              'data-placement': 'bottom'
-            , -> 'prealpha'
-        h2 id:'slogan', ->
-          text 'Better '
-          span class:'grooveshark_logo_text', ->
-            span 'Grooveshark'
-          text ' Playlists'
+        div id:'brand_row', class:'row content', ->
+          h1 id:'main_brand', ->
+            text 'Spiffyshark'
+            sup class:'alpha', ->
+              span
+                rel:'tooltip'
+                'data-original-title':'Very early preview; expect bugs!'
+                'data-placement': 'bottom'
+              , -> 'prealpha'
+          h2 id:'slogan', ->
+            text 'Better '
+            span class:'grooveshark_logo_text', ->
+              span 'Grooveshark'
+            text ' Playlists'
 
-    div id:'content', class:'container', ->
+      div id:'content', class:'container', ->
+        text @body
 
-      text @body
+      footer class:'footer', ->
+        div class:'container', ->
+          p ->
+            text '© 2012 '
+            a target:'_blank', href:'//namuol.github.com/', 'Louis Acresti'
+          ul class:'nav nav-pills', ->
+            li ->
+              a href:'//blog.spiffyshark.com', 'Blog'
+            li ->
+              a href:'//twitter.com/louroboros', 'twitter'
+            li ->
+              a href:'//facebook.com/spiffyshark', 'facebook'
 
     script src:'/coffeecup.js'
     script src:'//cdnjs.cloudflare.com/ajax/libs/jquery/1.8.2/jquery.min.js'
