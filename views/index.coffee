@@ -90,6 +90,15 @@ div class:'content container', id:'faq', ->
       If you do log in, your playlists will be exported to your own Grooveshark account, and will be stored
       permanently, so it is recommended.
       '''
+    section ->
+      h3 'What playlist formats can I import?'
+      p '''
+      Currently only <a href='//xspf.org'>XSPF</a> playlists are supported.
+      '''
+      p '''
+      I plan on supporting M3U and iTunes library files in the future. If you have a format you'd like
+      to see supported, <a href='mailto:louis.acresti@gmail.com'>let me know</a>!
+      '''
 
 div class:'content container', id:'playlists', ->
   ###
