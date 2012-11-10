@@ -493,6 +493,7 @@ coffeescript ->
 
     $ ->
       logged_in = false
+      user_id = undefined
       update_username = (username) ->
         $('.username-display').text username
         if username? and username != ''
@@ -585,6 +586,8 @@ coffeescript ->
             username: $('#log-in-username').val()
             password: $('#log-in-pass').val()
         .success (data) =>
+          user_id = data.user_id
+          s.emit 'user_id', user_id
           update_username($('#log-in-username').val())
         .error (data) =>
           $(@).parent().show()
@@ -604,12 +607,12 @@ coffeescript ->
           type: 'POST'
           url: '/logout'
         .success (data) =>
+          user_id = undefined
+          s.emit 'user_id', user_id
           update_username('')
           app.setLocation '#/'
           $('#xspf_playlists_list').html ''
-          console.log 'wat'
         .error (data) =>
-          console.log 'wat2'
           $(@).parent().show()
         .complete =>
           $(@).find('button').button 'reset'
@@ -650,6 +653,7 @@ coffeescript ->
       s.on 'connect', ->
         $('#disconnected_msg').hide()
         connected = true
+        s.emit 'user_id', 
 
       s.on 'disconnect', ->
         $('#disconnected_msg').show()

@@ -22,6 +22,20 @@ Array::remove = (from, to) ->
 alnum = (s) ->
   s.replace(/[^a-z0-9]/gi, '').toUpperCase()
 
+
+print_obj = (obj, depth=0, max_depth=2) ->
+  if depth > max_depth
+    return
+  i=0
+  dstr = ''
+  while i < depth
+    dstr += '  '
+    ++i
+
+  for own k,v of obj
+    console.log dstr+k
+    print_obj v, depth+1, max_depth
+
 gs_noauth = new GroovesharkClient config.grooveshark_key, config.grooveshark_secret
 gs_noauth.authenticate config.gs_anon_acct, config.gs_anon_password, (err, status, body) =>
   if err
@@ -146,7 +160,15 @@ zappa.run config.port, ->
   @get '/gs_artist/:id', ->
     @redirect "http://grooveshark.com/artist/~/#{@params.id}"
 
+  @on 'user_id': ->
+    @client.user_id = @data
+
   @on 'song': ->
+    if @client.user_id
+      client = clients[@client.user_id]
+    else
+      client = gs_noauth
+
     searchQueue.push (searchCallback) =>
       if @socket.disconnected
         searchCallback()
@@ -302,6 +324,7 @@ zappa.run config.port, ->
                 @request.session.user.pid = body.objectId
               @send
                 okay: true
+                user_id: @request.session.user.id
               , 200
           else
             parse.loginUser @body.username, config.parse_user_password
@@ -311,6 +334,7 @@ zappa.run config.port, ->
                 @request.session.user.pid = body.objectId
               @send
                 okay: true
+                user_id: @request.session.user.id
               , 200
 
 

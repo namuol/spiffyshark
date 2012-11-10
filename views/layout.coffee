@@ -10,6 +10,14 @@ html ->
               minimum-scale=0.75; 
               user-scalable=no;'''
     meta name:'apple-mobile-web-app-capable', content:'yes'
+    text '''
+    <meta property="og:title" content="Spiffyshark - Better Grooveshark Playlists" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="http://spiffyshark.com" />
+    <meta property="og:image" content="http://spiffyshark.com/spiffy3.png" />
+    <meta property="og:site_name" content="Spiffyshark" />
+    <meta property="fb:admins" content="24408892" />
+    '''
     title 'Spiffyshark: Better Grooveshark Playlists'
 
     link rel:'stylesheet', href:'bootstrap/css/bootstrap.css'
