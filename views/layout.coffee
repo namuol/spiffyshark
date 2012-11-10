@@ -30,7 +30,6 @@ html ->
       js.src = "//connect.facebook.net/en_US/all.js#xfbml=1&appId=305537439554846";
       fjs.parentNode.insertBefore(js, fjs);
     }(document, 'script', 'facebook-jssdk'));</script>
-
     '''
 
     div id:'all', ->
@@ -126,24 +125,30 @@ html ->
 
       footer class:'footer', ->
         div class:'container', ->
-          p ->
-            text '© 2012 '
-            a target:'_blank', href:'//namuol.github.com/', 'Louis Acresti'
-          ul class:'nav nav-pills', ->
-            li ->
-              a href:'#/about', 'About'
-            li ->
-              a href:'#/faq', 'FAQ'
-            li ->
-              a href:'//blog.spiffyshark.com', 'Blog'
-            li ->
-              a href:'//twitter.com/spiffyshark', 'Twitter'
-            li ->
-              a href:'//facebook.com/spiffyshark', 'Facebook'
-          div id:'social', ->
-            text '''
-            <fb:like href="http://facebook.com/spiffyshark" send="false" layout="button_count" width="80" show_faces="false" colorscheme="dark"></fb:like>
-            '''
+          div class:'row', ->
+            p id:'copyright', class:'pull-left', ->
+              text '© 2012 '
+              a target:'_blank', href:'//namuol.github.com/', 'Louis Acresti'
+            div id:'social', class:'pull-right', ->
+              text '''
+              <fb:like href="http://facebook.com/spiffyshark" send="false" layout="button_count" width="80" show_faces="false" colorscheme="dark"></fb:like>
+              '''
+          div class:'row', ->
+            ul class:'nav nav-pills pull-left', ->
+              li ->
+                a href:'#/about', 'About'
+              li ->
+                a href:'#/faq', 'FAQ'
+              li ->
+                a href:'#/thanks', 'Say Thanks'
+            ul class:'nav nav-pills pull-right', ->
+              li ->
+                a href:'//blog.spiffyshark.com', 'Blog'
+              li ->
+                a href:'//twitter.com/spiffyshark', 'Twitter'
+              li ->
+                a href:'//facebook.com/spiffyshark', 'Facebook'
+
             ###text '''
 <a href="https://twitter.com/share" class="twitter-share-button" data-url="http://spiffyshark.com" data-text="Create better Grooveshark playlists with @Spiffyshark!">Tweet</a>
   <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="//platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
