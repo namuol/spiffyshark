@@ -118,6 +118,10 @@ html ->
             a target:'_blank', href:'//namuol.github.com/', 'Louis Acresti'
           ul class:'nav nav-pills', ->
             li ->
+              a href:'#/about', 'About'
+            li ->
+              a href:'#/faq', 'FAQ'
+            li ->
               a href:'//blog.spiffyshark.com', 'Blog'
             li ->
               a href:'//twitter.com/louroboros', 'twitter'

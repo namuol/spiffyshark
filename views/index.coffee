@@ -19,6 +19,78 @@ div class:'content container', id:'main', ->
 div class:'content container', id:'help', ->
   h2 'Help contents go here.'
 
+div class:'content container', id:'about', ->
+  section ->
+    h2 'About'
+
+    section ->
+      h3 'What is this and why did you make it?'
+      p '''
+      I created Spiffyshark because I was frustrated with the inability to easily import playlist files
+      from other services like Last.fm into Grooveshark.
+      '''
+      p '''
+      There were some <a href='//groovylists.com'>existing sites</a> out there that do this fairly well,
+      but they lacked any ability to manually select songs or change the search terms when nothing can be
+      found.
+      '''
+      p '''
+      Grooveshark has a lot of content, but it's not always labeled very well. Spiffyshark finds the stuff
+      you most likely want, and lets you manually select each song, if necessary.
+      '''
+      p '''
+      Spiffyshark also acts as a powerful tool for creating and editing Grooveshark playlists from scratch.
+      '''
+
+    section ->
+      h3 'Who are you?'
+      p '''
+      I'm Louis Acresti, a freelance programmer from Rochester, New York (soon to be in Austin, Texas).
+      '''
+      p '''
+      I really love web development. I also love cheese, homebrewing beer, and <a href='//last.fm/user/louman' target='_blank'>listening to music</a>, of course.
+      '''
+      p '''
+      If you're looking for someone work on an awesome project with, please <a href='mailto:louis.acresti@gmail.com' target='_blank'>contact me</a>.
+      '''
+
+div class:'content container', id:'faq', ->
+  section ->
+    h2 'FAQ'
+    section ->
+      h3 'Is it free?'
+      p '''
+      <b>Yes!</b> I aim to keep Spiffyshark a <b>completely</b> free service, with <b>no ads</b> getting in the way.
+      '''
+      p '''
+      I pay for the hosting out of my pocket, so if you found the app useful, please consider making a small
+      <a href='#/donate'>donation</a>. I will put the money toward hosting costs and site maintenance. Thank you!
+      '''
+    section ->
+      h3 'How does it choose songs?'
+      p '''
+      It chooses the best song based on a simple "score" model. Songs that most closely resemble your search
+      terms are chosen.
+      '''
+      p '''
+      The most important factors in the score are the title, and artist name. If an album is provided, it is the
+      next most important search factor. Songs that provide artwork are also assumed to be slightly higher-quality.
+      '''
+      p '''
+      Ties are broken when songs comes from "verified" Grooveshark users -- users that Grooveshark has flagged
+      as providing high quality song files.
+      '''
+    section ->
+      h3 'Do I need to log in?'
+      p '''
+      No. You can create "anonymous" playlists without logging in to your Grooveshark account. Playlists
+      are saved temporarily (for 24 hours) on the Spiffyshark's own Grooveshark account.
+      '''
+      p '''
+      If you do log in, your playlists will be exported to your own Grooveshark account, and will be stored
+      permanently, so it is recommended.
+      '''
+
 div class:'content container', id:'playlists', ->
   ###
   div class:'span5', ->
@@ -1070,11 +1142,17 @@ coffeescript ->
           $('#main').show()
           $('#brand_row').show()
 
-        @get '#/help', ->
+        @get '#/faq', ->
           $('.nav .active').removeClass 'active'
-          $('.nav [href="#/help"]').parent().addClass 'active'
+          $('.nav [href="#/faq"]').parent().addClass 'active'
           $('.content').hide()
-          $('#help').show()
+          $('#faq').show()
+
+        @get '#/about', ->
+          $('.nav .active').removeClass 'active'
+          $('.nav [href="#/about"]').parent().addClass 'active'
+          $('.content').hide()
+          $('#about').show()
 
         @get '#/playlists', ->
           $('.nav .active').removeClass 'active'
