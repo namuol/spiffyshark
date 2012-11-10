@@ -54,7 +54,7 @@ div class:'content container', id:'about', ->
       I also love cheese, homebrewing beer, and <a href='//last.fm/user/louman' target='_blank'>listening to music</a>, of course.
       '''
       p '''
-      If you're looking for someone work on an awesome project with, please <a href='mailto:louis.acresti@gmail.com' target='_blank'>contact me</a>.
+      If you're looking for someone to work on an awesome project with, please <a href='mailto:louis.acresti@gmail.com' target='_blank'>contact me</a>.
       '''
 
 div class:'content container', id:'faq', ->
