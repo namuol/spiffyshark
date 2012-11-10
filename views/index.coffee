@@ -24,7 +24,7 @@ div class:'content container', id:'about', ->
     h2 'About'
 
     section ->
-      h3 'What is this and why did you make it?'
+      h3 'Why use Spiffyshark?'
       p '''
       I created Spiffyshark because I was frustrated with the inability to easily import playlist files
       from other services like Last.fm into Grooveshark.
@@ -48,7 +48,10 @@ div class:'content container', id:'about', ->
       I'm Louis Acresti, a freelance programmer from Rochester, New York (soon to be in Austin, Texas).
       '''
       p '''
-      I really love web development. I also love cheese, homebrewing beer, and <a href='//last.fm/user/louman' target='_blank'>listening to music</a>, of course.
+      I really love web development.
+      '''
+      p '''
+      I also love cheese, homebrewing beer, and <a href='//last.fm/user/louman' target='_blank'>listening to music</a>, of course.
       '''
       p '''
       If you're looking for someone work on an awesome project with, please <a href='mailto:louis.acresti@gmail.com' target='_blank'>contact me</a>.

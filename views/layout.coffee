@@ -142,12 +142,13 @@ html ->
               a href:'//facebook.com/spiffyshark', 'Facebook'
           div id:'social', ->
             text '''
-            <div class="fb-like" data-href="http://facebook.com/spiffyshark" data-send="false" data-layout="button_count" data-width="60" data-show-faces="false" data-colorscheme="dark" data-font="arial"></div>
+            <fb:like href="http://facebook.com/spiffyshark" send="false" layout="button_count" width="80" show_faces="false" colorscheme="dark"></fb:like>
             '''
-            text '''
+            ###text '''
 <a href="https://twitter.com/share" class="twitter-share-button" data-url="http://spiffyshark.com" data-text="Create better Grooveshark playlists with @Spiffyshark!">Tweet</a>
   <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="//platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
             '''
+            ###
 
     script src:'/coffeecup.js'
     script src:'//cdnjs.cloudflare.com/ajax/libs/jquery/1.8.2/jquery.min.js'
