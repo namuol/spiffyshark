@@ -20,6 +20,19 @@ html ->
       window.scripts = []
 
   body ->
+    # SOCIAL:
+    text '''
+    <div id="fb-root"></div>
+    <script>(function(d, s, id) {
+      var js, fjs = d.getElementsByTagName(s)[0];
+      if (d.getElementById(id)) return;
+      js = d.createElement(s); js.id = id;
+      js.src = "//connect.facebook.net/en_US/all.js#xfbml=1&appId=305537439554846";
+      fjs.parentNode.insertBefore(js, fjs);
+    }(document, 'script', 'facebook-jssdk'));</script>
+
+    '''
+
     div id:'all', ->
       if @user
         username = @user.name
@@ -124,9 +137,17 @@ html ->
             li ->
               a href:'//blog.spiffyshark.com', 'Blog'
             li ->
-              a href:'//twitter.com/louroboros', 'twitter'
+              a href:'//twitter.com/spiffyshark', 'Twitter'
             li ->
-              a href:'//facebook.com/spiffyshark', 'facebook'
+              a href:'//facebook.com/spiffyshark', 'Facebook'
+          div id:'social', ->
+            text '''
+            <div class="fb-like" data-href="http://facebook.com/spiffyshark" data-send="false" data-layout="button_count" data-width="60" data-show-faces="false" data-colorscheme="dark" data-font="arial"></div>
+            '''
+            text '''
+<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://spiffyshark.com" data-text="Create better Grooveshark playlists with @Spiffyshark!">Tweet</a>
+  <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="//platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
+            '''
 
     script src:'/coffeecup.js'
     script src:'//cdnjs.cloudflare.com/ajax/libs/jquery/1.8.2/jquery.min.js'
@@ -161,3 +182,5 @@ html ->
           var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
         })();
       '''
+    text '''
+    '''

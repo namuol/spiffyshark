@@ -63,11 +63,12 @@ div class:'content container', id:'faq', ->
       <b>Yes!</b> I aim to keep Spiffyshark a <b>completely</b> free service, with <b>no ads</b> getting in the way.
       '''
       p '''
-      I pay for the hosting out of my pocket, so if you found the app useful, please consider making a small
-      <a href='#/donate'>donation</a>. I will put the money toward hosting costs and site maintenance. Thank you!
+      <i><a href='//youtube.com/watch?v=Pgd2w0SQEYI' target='_blank'>Having said that</a></i>, I pay for the hosting out of my pocket,
+      so if you find the app useful, please consider making a small 
+      <a href='#/thanks'>contribution</a>. Money goes toward hosting costs, site maintenance, and quality beer.
       '''
     section ->
-      h3 'How does it choose songs?'
+      h3 'How are songs chosen?'
       p '''
       It chooses the best song based on a simple "score" model. Songs that most closely resemble your search
       terms are chosen.
@@ -83,12 +84,15 @@ div class:'content container', id:'faq', ->
     section ->
       h3 'Do I need to log in?'
       p '''
-      No. You can create "anonymous" playlists without logging in to your Grooveshark account. Playlists
-      are saved temporarily (for 24 hours) on the Spiffyshark's own Grooveshark account.
+      No. You can create "anonymous" playlists without logging in to your Grooveshark account. These playlists 
+      are saved temporarily (for 24 hours) on Spiffyshark's own Grooveshark account.
       '''
       p '''
       If you do log in, your playlists will be exported to your own Grooveshark account, and will be stored
       permanently, so it is recommended.
+      '''
+      p '''"Anonymous" playlists can be saved permanently by re-saving them once logged in; a copy
+      will be made, and you can safely delete the original Anonymous playlist.
       '''
     section ->
       h3 'What playlist formats can I import?'
@@ -99,6 +103,39 @@ div class:'content container', id:'faq', ->
       I plan on supporting M3U and iTunes library files in the future. If you have a format you'd like
       to see supported, <a href='mailto:louis.acresti@gmail.com'>let me know</a>!
       '''
+
+div class:'content container', id:'thanks', ->
+  section ->
+    h2 'Say Thanks'
+    p '''
+    Spiffyshark is <b>completely free</b> to use. With no ads. That doesn't mean it's free to host!
+    '''
+    p '''
+    Your small contribution goes a long way to keep the site running smoothly. It will also make you feel warm and fuzzy,
+    and reaffirm my faith in humanity.
+    '''
+
+    form action:"https://checkout.google.com/api/checkout/v2/checkoutForm/Merchant/211159781209062", id:"BB_BuyButtonForm", method:"post", name:"BB_BuyButtonForm", target:"_top", ->
+      input name:"item_name_1", type:"hidden", value:"Spiffyshark Supporter"
+      input name:"item_description_1", type:"hidden", value:""
+      input name:"item_quantity_1", type:"hidden", value:"1"
+      input name:"item_currency_1", type:"hidden", value:"USD"
+      input name:"_charset_", type:"hidden", value:"utf-8"
+      div class:'input-prepend input-append', ->
+        span class:'add-on currency', '$'
+        input id:'buy-now-amt', name:"item_price_1", type:"text", value:"5.00"
+        span id:'buy-now-wrap', class:'add-on', ->
+          input alt:"", src:"https://checkout.google.com/buttons/buy.gif?merchant_id=211159781209062&amp;w=117&amp;h=48&amp;style=trans&amp;variant=text&amp;loc=en_US", type:"image"
+
+    section ->
+      h3 'Other Ways to Say Thanks'
+      ul ->
+        li ->
+          a href:'//facebook.com/spiffyshark', 'Like the Facebook page'
+        li ->
+          a href:'//twitter.com/spiffyshark', 'Follow @spiffyshark'
+        li ->
+          a href:'mailto:louis.acresti@gmail.com', 'Tell me that you use the app'
 
 div class:'content container', id:'playlists', ->
   ###
@@ -1156,6 +1193,12 @@ coffeescript ->
           $('.nav [href="#/faq"]').parent().addClass 'active'
           $('.content').hide()
           $('#faq').show()
+
+        @get '#/thanks', ->
+          $('.nav .active').removeClass 'active'
+          $('.nav [href="#/thanks"]').parent().addClass 'active'
+          $('.content').hide()
+          $('#thanks').show()
 
         @get '#/about', ->
           $('.nav .active').removeClass 'active'
