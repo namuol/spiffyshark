@@ -107,8 +107,6 @@ zappa.run config.port, ->
         req.session.errors = []
       next()
 
-  @enable 'minify'
-
   @get '/', ->
     @render 'index',
       user: @request.session.user

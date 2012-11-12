@@ -894,8 +894,9 @@ coffeescript ->
             .success (data) =>
               $(@).parent().remove()
               local_playlists = JSON.parse localStorage.getItem 'playlists'
-              delete local_playlists[$(@).data('id')]
-              localStorage.setItem 'playlists', JSON.stringify local_playlists
+              if local_playlists
+                delete local_playlists[$(@).data('id')]
+                localStorage.setItem 'playlists', JSON.stringify local_playlists
             .error (data) =>
               $(@).parent().show()
 
@@ -1226,7 +1227,7 @@ coffeescript ->
             local_playlists = {}
           for own id,p of local_playlists
             p.local = true
-            if $('#xspf_playlists_list > li[data-playlist-id]').length is 0
+            if $("#xspf_playlists_list > li[data-playlist-id=#{id}]").length is 0
               $('#xspf_playlists_list').prepend xspf_playlist_row_template p
           $('[rel=tooltip][data-original-title]').tooltip()
 
