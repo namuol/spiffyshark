@@ -47,6 +47,7 @@ button
 
 .content
   overflow-x hidden
+  overflow-y visible
   display none
 
 #top
@@ -119,7 +120,6 @@ button
 #new_playlist_options > .option > p
   opacity 0
   margin-left 20px
-  margin-top -15px
   color white !important
   font-size 20px
   transition opacity 150ms
@@ -141,20 +141,19 @@ button
   background url(64_upload.png) 15px 45px no-repeat
   margin-right 0 !important
   overflow hidden
+#upload
+  width 0
+  height 0
+  margin 0
+  padding 0
 
-#import > form
-  position absolute
-  top 0
-  left 0
+#upload_file
+  width 0
+  height 0
 
-#import input[type=file]
-  position absolute
-  top 0
-  left 0
-  font-size 9999px
-  width 1000px
-  height 1000px
-  opacity 0
+#import_buttons
+  float right
+  margin-right 10px
 
 #import *
   cursor pointer
@@ -178,6 +177,7 @@ button
   font-size 30px
   box-sizing border-box
   margin-top 10px
+  margin-bottom 5px
   color rgba(255,255,255,0.9)
 
 #slogan
@@ -504,6 +504,7 @@ a:hover
   border-radius 6px
   padding 0 4px
   background white
+  min-height 170px
 
 #playlist legend
   color black
@@ -714,6 +715,16 @@ button.editTrack
   #show_gs_playlist.disabled,
   #show_gs_playlist[disabled]
     background url(gs.png) center no-repeat, linear-gradient(top, #222, #151515) !important
+
+.btn-lastfm
+  width 87px
+  background url(lastfm.png) center no-repeat, linear-gradient(top, #B00, #900) !important
+
+.btn-lastfm:hover,
+.btn-lastfm:active,
+.btn-lastfm.disabled,
+.btn-lastfm[disabled]
+  background url(lastfm.png) center no-repeat, linear-gradient(top, #800, #800) !important
 
 .grooveshark_logo_text
   display inline-block

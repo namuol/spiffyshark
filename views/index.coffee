@@ -9,24 +9,14 @@ div class:'content container', id:'main', ->
         p '...for your favorite album'
       div id:'import', class:'row option', ->
         legend 'Import'
-        p ->
-          text '...your existing playlist'
-
-        div id:'import_modal', class:'modal hide', ->
-          div class:'modal-header', ->
-            button
-              type:'button'
-              class:'close'
-              'data-dismiss':'modal'
-              'aria-hidden':'true'
-            , -> text '&times'
-
-            h3 'Add an Album\'s Tracks'
-
-          div class:'modal-body', ->
-            a href:'//xspf.org', target:'_blank', 'xspf'
-            form id:'upload', enctype:'multipart/form-data', action:'#/upload_playlist', method:'post', ->
-              input type:'file'
+        form id:'upload', enctype:'multipart/form-data', action:'#/upload_playlist', method:'post', ->
+          input id:'upload_file', type:'file'
+        div id:'import_buttons', ->
+          button id:'lastfm_main', class:'btn btn-lastfm'
+          text ' '
+          button class:'btn btn-inverse', id:'upload_btn', ->
+            i class:'icon-file icon-white'
+            b ' File'
 
 div class:'content container', id:'help', ->
   h2 'Help contents go here.'
@@ -193,7 +183,7 @@ div class:'content', id:'playlist', ->
               #i class:'icon-search'
               a id:'add_album', tabindex:-1, href:'#', 'Album...'
             li ->
-              a id:'add_lastfm', tabindex:-1, href:'#', 'LastFM...'
+              a id:'add_lastfm', tabindex:-1, href:'#', 'Last.fm...'
 
         button id:'del_song', class:'btn btn-danger btn-large', disabled:'disabled', ->
           i class:'icon-trash icon-white'
@@ -279,14 +269,17 @@ div id:'lastfm_modal', class:'modal hide', ->
       'aria-hidden':'true'
     , -> text '&times'
 
-    h3 'Add LastFM Tracks'
+    h3 'Add Last.fm Tracks'
 
   div class:'modal-body', ->
     form class:'form-horizontal', ->
       div class:'control-group', ->
-        label class:'control-label', for:'user', 'LastFM User'
+        label class:'control-label', for:'user', 'Username'
         div class:'controls', ->
           input class:'input-xlarge', type:'text', name:'user'
+      div class:'control-group', ->
+        div class:'controls', ->
+          button class:'btn btn-primary', type:'submit', 'Load Last.fm Playlists'
       div id:'lastfm_results'
 
 div id:'song_modal', class:'modal hide', ->
@@ -1055,8 +1048,8 @@ coffeescript ->
               track.idx = idx
               $('#playlist_items').sortable 'refresh'
 
-            async.forEachLimit res.playlist.trackList.track, 2, (track, cb) =>
-              getSong track.idx, cb
+            #async.forEachLimit res.playlist.trackList.track, 2, (track, cb) =>
+            #  getSong track.idx, cb
 
             $('#lastfm_modal').modal 'hide'
 
@@ -1294,6 +1287,10 @@ coffeescript ->
           $('#album_search_modal').modal()
           @redirect '#/new_playlist'
 
+        $('#lastfm_main').click ->
+          $('#lastfm_modal').modal()
+          app.setLocation '#/new_playlist'
+
         @get '#/new_playlist', ->
           if confirmDialogShown
             return
@@ -1446,6 +1443,13 @@ coffeescript ->
             $('#playlist').hide()
             $('#playlist_loading').hide()
             app.setLocation '#/'
+
+        $('#upload_btn').click (e) ->
+          e.preventDefault()
+
+          $('#upload_file').click()
+          
+          return false
 
         $('#upload input[type=file]').change ->
           $('#upload').submit()
