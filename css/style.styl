@@ -406,15 +406,17 @@ ul.search_results
 .modal_search_results ul
   margin 0
 
-button.add_album_tracks
+button.add_album_tracks,
+button.add_lastfm_playlist_tracks
   margin-top -35px
   margin-right 5px
   float right
 
-#album_modal_search_results > ul
+ul.search_results
   margin 0
 
-.discogs_master_result
+.discogs_master_result,
+.lastfm_playlist_result
   display none
   padding 10px
   padding-top 0
@@ -424,7 +426,9 @@ button.add_album_tracks
   margin 0
 
 .show_discogs_master,
-.hide_discogs_master
+.hide_discogs_master,
+.show_lastfm_playlist,
+.hide_lastfm_playlist
   cursor pointer
   opacity 0.5
   box-sizing border-box
@@ -435,7 +439,9 @@ button.add_album_tracks
   padding-left 10px
 
 .show_discogs_master:hover,
-.hide_discogs_master:hover
+.hide_discogs_master:hover,
+.show_lastfm_playlist:hover,
+.hide_lastfm_playlist:hover
   opacity 1
 
 .discogs_tracklist
@@ -451,16 +457,17 @@ button.add_album_tracks
   width 90px
   height 88px
 
-.hide_discogs_master
+.hide_discogs_master,
+.hide_lastfm_playlist
   display none
 
-.search_results li
+.search_results li,
 .modal_search_results li
+  margin 0
   background white
 
 .search_results li:nth-child(odd),
 .modal_search_results li:nth-child(odd)
-  margin 0
   background #eee
 
 .playlists_list > li

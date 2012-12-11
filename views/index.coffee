@@ -10,11 +10,23 @@ div class:'content container', id:'main', ->
       div id:'import', class:'row option', ->
         legend 'Import'
         p ->
-          text '...your playlist file ('
-          a href:'//xspf.org', target:'_blank', 'xspf'
-          text ')'
-        form id:'upload', enctype:'multipart/form-data', action:'#/upload_playlist', method:'post', ->
-          input type:'file'
+          text '...your existing playlist'
+
+        div id:'import_modal', class:'modal hide', ->
+          div class:'modal-header', ->
+            button
+              type:'button'
+              class:'close'
+              'data-dismiss':'modal'
+              'aria-hidden':'true'
+            , -> text '&times'
+
+            h3 'Add an Album\'s Tracks'
+
+          div class:'modal-body', ->
+            a href:'//xspf.org', target:'_blank', 'xspf'
+            form id:'upload', enctype:'multipart/form-data', action:'#/upload_playlist', method:'post', ->
+              input type:'file'
 
 div class:'content container', id:'help', ->
   h2 'Help contents go here.'
@@ -125,7 +137,7 @@ div class:'content container', id:'thanks', ->
       input name:"item_currency_1", type:"hidden", value:"USD"
       input name:"_charset_", type:"hidden", value:"utf-8"
       div class:'input-prepend input-append', ->
-        span class:'add-on currency', '$'
+        span class:'add-on currency', 'USD $'
         input id:'buy-now-amt', name:"item_price_1", type:"text", value:"5.00"
         span id:'buy-now-wrap', class:'add-on', ->
           input alt:"", src:"https://checkout.google.com/buttons/buy.gif?merchant_id=211159781209062&amp;w=117&amp;h=48&amp;style=trans&amp;variant=text&amp;loc=en_US", type:"image"
@@ -180,6 +192,8 @@ div class:'content', id:'playlist', ->
             li ->
               #i class:'icon-search'
               a id:'add_album', tabindex:-1, href:'#', 'Album...'
+            li ->
+              a id:'add_lastfm', tabindex:-1, href:'#', 'LastFM...'
 
         button id:'del_song', class:'btn btn-danger btn-large', disabled:'disabled', ->
           i class:'icon-trash icon-white'
@@ -255,6 +269,25 @@ div id:'album_search_modal', class:'modal hide', ->
             strong 'Search'
 
       div id:'album_modal_search_results'
+
+div id:'lastfm_modal', class:'modal hide', ->
+  div class:'modal-header', ->
+    button
+      type:'button'
+      class:'close'
+      'data-dismiss':'modal'
+      'aria-hidden':'true'
+    , -> text '&times'
+
+    h3 'Add LastFM Tracks'
+
+  div class:'modal-body', ->
+    form class:'form-horizontal', ->
+      div class:'control-group', ->
+        label class:'control-label', for:'user', 'LastFM User'
+        div class:'controls', ->
+          input class:'input-xlarge', type:'text', name:'user'
+      div id:'lastfm_results'
 
 div id:'song_modal', class:'modal hide', ->
 
@@ -395,6 +428,45 @@ coffeescript ->
             li ->
               text track.position
               text '. '
+              text track.title
+
+    lastfm_results_template = coffeecup.compile ->
+      if @playlists.playlist.length is 0
+        text 'Nothing found.'
+        return
+
+      ul class:'search_results', ->
+        for playlist in @playlists.playlist
+          li
+            class:'discogs_master'
+            'data-id':playlist.id
+            'data-creator':playlist.creator.replace('http://www.last.fm/user/','')
+            'data-title':playlist.title
+          , ->
+            div class:'show_lastfm_playlist', ->
+              i class:'icon-chevron-right'
+            div class:'hide_lastfm_playlist', ->
+              i class:'icon-chevron-down'
+            div class:'track_info', ->
+              text ' '
+              img class:'album_art', src:''
+              div class:'track_title', ->
+                text playlist.title
+              div class:'track_artist_album', '&nbsp;'
+            button class:'btn btn-success add_lastfm_playlist_tracks', ->
+              i class:'icon-plus icon-white'
+            div class:'lastfm_playlist_result'
+
+    lastfm_playlist_result_template = coffeecup.compile ->
+      div class:'well well-small', ->
+        #div class:'discogs_thumb', ->
+        #  img src:@thumb
+        text 'Tracklist:'
+        ol class:'discogs_tracklist', ->
+          for track in @playlist.trackList.track
+            li ->
+              text track.creator
+              text ' - '
               text track.title
 
     playlist_row_template = coffeecup.compile ->
@@ -884,21 +956,6 @@ coffeescript ->
               res.data.thumb = el.parent().data('thumb')
               result_el.html discogs_master_result_template res.data
           return false
-        
-        $('button.del_playlist').live 'click', (e) ->
-          if confirm 'Are you sure you want to delete that playlist? This cannot be undone!'
-            $(@).parent().hide()
-            $.ajax
-              type: 'DELETE'
-              url: '/playlist/' + $(@).data 'id'
-            .success (data) =>
-              $(@).parent().remove()
-              local_playlists = JSON.parse localStorage.getItem 'playlists'
-              if local_playlists
-                delete local_playlists[$(@).data('id')]
-                localStorage.setItem 'playlists', JSON.stringify local_playlists
-            .error (data) =>
-              $(@).parent().show()
 
         $('.hide_discogs_master').live 'click', (e) ->
           $(@).hide()
@@ -940,7 +997,84 @@ coffeescript ->
               getSong track.idx, cb
             $('#album_search_modal').modal 'hide'
           return false
-        
+ 
+        $('#add_lastfm').live 'click', (e) ->
+          $('#lastfm_modal').modal()
+          return false
+
+        $('#lastfm_modal form').on 'submit', (e) ->
+          e.preventDefault()
+
+          $('#lastfm_results').html animooted
+          username = $("#lastfm_modal form input[name=user]").val()
+          $.getJSON '/lfm_playlists/' + username
+          , (res, status, xhr) ->
+            #TODO HANDLE ERRORS
+            $('#lastfm_results').html lastfm_results_template res
+
+          return false
+       
+        $('.show_lastfm_playlist').live 'click', (e) ->
+          el = $(@)
+          el.hide()
+          el.siblings('.hide_lastfm_playlist').show()
+          result_el = el.parent().find('.lastfm_playlist_result').show()
+          if not el.data('loaded') is true
+            result_el.html animooted
+            $.getJSON '/lfm_playlist/' + el.parent().data('id')
+            , (res, status, xhr) =>
+              #TODO HANDLE ERRORS
+              el.data('loaded', true)
+              console.log res
+              result_el.html lastfm_playlist_result_template res
+          return false
+
+        $('.hide_lastfm_playlist').live 'click', (e) ->
+          $(@).hide()
+          $(@).siblings('.show_lastfm_playlist').show()
+          $(@).parent().find('.lastfm_playlist_result').hide()
+          return false
+       
+        $('.add_lastfm_playlist_tracks').live 'click', (e) ->
+          if jspf.playlist.track.length is 0
+            creator = $(@).parent().data 'creator'
+            console.log creator
+            title = $(@).parent().data 'title'
+            jspf.playlist.creator = creator
+            jspf.playlist.title = title
+            $('#playlist legend').html playlist_legend_template jspf.playlist
+
+          $.getJSON '/lfm_playlist/' + $(@).parent().data('id')
+          , (res, status, xhr) =>
+            $(@).button 'reset'
+            for track in res.playlist.trackList.track
+              idx = (jspf.playlist.track.push track) - 1
+              $('#playlist_items').append playlist_row_template
+                track: track
+                index: idx
+              track.idx = idx
+              $('#playlist_items').sortable 'refresh'
+
+            async.forEachLimit res.playlist.trackList.track, 2, (track, cb) =>
+              getSong track.idx, cb
+
+            $('#lastfm_modal').modal 'hide'
+
+        $('button.del_playlist').live 'click', (e) ->
+          if confirm 'Are you sure you want to delete that playlist? This cannot be undone!'
+            $(@).parent().hide()
+            $.ajax
+              type: 'DELETE'
+              url: '/playlist/' + $(@).data 'id'
+            .success (data) =>
+              $(@).parent().remove()
+              local_playlists = JSON.parse localStorage.getItem 'playlists'
+              if local_playlists
+                delete local_playlists[$(@).data('id')]
+                localStorage.setItem 'playlists', JSON.stringify local_playlists
+            .error (data) =>
+              $(@).parent().show()
+
         $('#show_gs_playlist').live 'click', (e) ->
           if not jspf.playlist.extension[gs_playlist_rel]?
             alert 'You must save the playlist, first.'

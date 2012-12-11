@@ -10,6 +10,7 @@ XSPF = require './public/xspf_parser'
 JSON = require 'JSON'
 fs = require 'fs'
 async = require 'async'
+request = require 'request'
 
 {exec} = require 'child_process'
 exec 'cake build'
@@ -21,7 +22,6 @@ Array::remove = (from, to) ->
 
 alnum = (s) ->
   s.replace(/[^a-z0-9]/gi, '').toUpperCase()
-
 
 print_obj = (obj, depth=0, max_depth=2) ->
   if depth > max_depth
@@ -141,7 +141,29 @@ zappa.run config.port, ->
   
   setupSearchQueue()
   setupUrlQueue()
-  
+
+  @get '/lfm_playlists/:user', ->
+    request.get 'http://ws.audioscrobbler.com/2.0',
+      qs:
+        api_key:config.lastfm_key
+        format:'json'
+        method:'user.getplaylists'
+        user:@params.user
+    , (err, res, body) =>
+      return if handle_errors @request, @response, err, res.status
+      @send body
+
+  @get '/lfm_playlist/:id', ->
+    request.get 'http://ws.audioscrobbler.com/2.0',
+      qs:
+        api_key:config.lastfm_key
+        format:'json'
+        method:'playlist.fetch'
+        playlistURL:'lastfm://playlist/' + @params.id
+    , (err, res, body) =>
+      return if handle_errors @request, @response, err, res.status
+      @send body
+
   @get '/gs_song/:id', ->
     urlQueue.push (urlCallback) =>
       gs_noauth.request 'getSongURLFromSongID',
