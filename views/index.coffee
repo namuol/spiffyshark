@@ -986,8 +986,8 @@ coffeescript ->
               track.idx = idx
               $('#playlist_items').sortable 'refresh'
 
-            async.forEachLimit res.data.tracklist, 2, (track, cb) =>
-              getSong track.idx, cb
+            $('#search_songs').click()
+
             $('#album_search_modal').modal 'hide'
           return false
  
@@ -1048,8 +1048,7 @@ coffeescript ->
               track.idx = idx
               $('#playlist_items').sortable 'refresh'
 
-            #async.forEachLimit res.playlist.trackList.track, 2, (track, cb) =>
-            #  getSong track.idx, cb
+            $('#search_songs').click()
 
             $('#lastfm_modal').modal 'hide'
 

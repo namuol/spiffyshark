@@ -119,9 +119,9 @@ html ->
             sup class:'alpha', ->
               span
                 rel:'tooltip'
-                'data-original-title':'Very early preview; expect bugs!'
+                'data-original-title':'This is alpha software; expect bugs!'
                 'data-placement': 'bottom'
-              , -> 'prealpha'
+              , -> 'preview'
           h2 id:'slogan', ->
             text 'Better '
             span class:'grooveshark_logo_text', ->
