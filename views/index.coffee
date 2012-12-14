@@ -1,12 +1,6 @@
 div class:'content container', id:'main', ->
   div id:'new_playlist_options_wrapper', ->
     div id:'new_playlist_options', class:'row', ->
-      a id:'create', class:'row option', href:'#/new_playlist', ->
-        legend 'Create'
-        p '...your next great playlist'
-      a id:'search', class:'row option', href:'#/search', ->
-        legend 'Search'
-        p '...for your favorite album'
       div id:'import', class:'row option', ->
         legend 'Import'
         form id:'upload', enctype:'multipart/form-data', action:'#/upload_playlist', method:'post', ->
@@ -17,6 +11,13 @@ div class:'content container', id:'main', ->
           button class:'btn btn-inverse', id:'upload_btn', ->
             i class:'icon-file icon-white'
             b ' File'
+      a id:'search', class:'row option', href:'#/search', ->
+        legend 'Whole-Album'
+        p 'Find all tracks with one click'
+      a id:'create', class:'row option', href:'#/new_playlist', ->
+        legend 'New Mix'
+        p 'Create a playlist from scratch'
+
 
 div class:'content container', id:'help', ->
   h2 'Help contents go here.'
@@ -322,13 +323,16 @@ coffeescript ->
           div class:'modal_search_results'
 
     grooveshark_playlist_link_modal_template = coffeecup.compile ->
-      div class:'modal hide', ->
+      div class:'modal hide grooveshark_playlist_link_modal', ->
         div class:'modal-body', ->
           h4 'Success!'
           p 'Click the link below to view your shiny new playlist!'
           div class:'well well-small', ->
             a class:'grooveshark_playlist_link', href:@url, target:'grooveshark', ->
               text @url
+          p ->
+            text 'Like Spiffyshark? '
+            a href:'#/thanks', target:'_blank', 'Say Thanks!'
 
     song_modal_search_results_template = coffeecup.compile ->
       track_info = (song, index, chosen) ->

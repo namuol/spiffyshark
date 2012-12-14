@@ -18,7 +18,9 @@ html ->
     <meta property="og:site_name" content="Spiffyshark" />
     <meta property="fb:admins" content="24408892" />
     '''
-    title 'Spiffyshark: Better Grooveshark Playlists'
+    meta name:'description', content:'Convert your LastFM and XSPF playlists to Grooveshark. Create whole-album playlists in a few clicks.'
+    meta name:'keywords', content:'grooveshark, playlist, convert, converter, import, importer, edit, editor, LastFM, whole album'
+    title 'Spiffyshark: Convert your LastFM and XSPF playlists to Grooveshark. Create whole-album playlists in a few clicks.'
 
     link rel:'stylesheet', href:'bootstrap/css/bootstrap.css'
     link rel:'stylesheet', href:'bootstrap/css/bootstrap-responsive.css'
