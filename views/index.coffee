@@ -8,9 +8,14 @@ div class:'content container', id:'main', ->
         div id:'import_buttons', ->
           button id:'lastfm_main', class:'btn btn-lastfm'
           text ' '
-          button class:'btn btn-inverse', id:'upload_btn', ->
-            i class:'icon-file icon-white'
-            b ' File'
+          span
+            rel:'tooltip'
+            'data-original-title':'XSPF format only'
+            'data-placement': 'bottom'
+          , ->
+            button class:'btn btn-inverse', id:'upload_btn', ->
+              i class:'icon-file icon-white'
+              b ' File'
       a id:'search', class:'row option', href:'#/search', ->
         legend 'Whole-Album'
         p 'Find all tracks with one click'
