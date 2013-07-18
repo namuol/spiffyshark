@@ -630,7 +630,7 @@ coffeescript ->
         return false
 
       hide_login = true
-      $('#log-in').live 'blur', (e) ->
+      $(document).on 'blur', '#log-in', (e) ->
         hide_login = true
         setTimeout =>
           if hide_login
@@ -638,7 +638,7 @@ coffeescript ->
             $('#show_login_form').show()
         , 250
 
-      $('#log-in').live 'focus', (e) ->
+      $(document).on 'focus', '#log-in', (e) ->
         hide_login = false
         setTimeout =>
           if hide_login
@@ -847,34 +847,34 @@ coffeescript ->
         #  app.setLocation '#/playlists'
         #  return false
 
-        $('#playlist_title').live 'blur', ->
+        $(document).on 'blur', '#playlist_title', ->
           old = jspf.playlist.title
           _new = $('#playlist_title').text()
           if old != _new
             jspf.playlist.title = _new
             playlistDirtied()
 
-        $('#playlist_creator').live 'blur', ->
+        $(document).on 'blur', '#playlist_creator',   ->
           old = jspf.playlist.creator
           _new = $('#playlist_creator').text()
           if old != _new
             jspf.playlist.creator = _new
             playlistDirtied()
 
-        $('#playlist_creator, #playlist_title').live 'keydown', (e) ->
+        $(document).on 'keydown', '#playlist_creator, #playlist_title', (e) ->
           if e.which is 13
             $(@).blur()
 
         searching = false
         searches_break = false
 
-        $('#cancel_search_songs').live 'click', (e) ->
+        $(document).on 'click', '#cancel_search_songs', (e) ->
           e.preventDefault()
           searches_break = true
           return false
         $('#cancel_search_songs_wrap').hide()
 
-        $('#search_songs').live 'click', (e) ->
+        $(document).on 'click', '#search_songs', (e) ->
           $('#cancel_search_songs_wrap').show()
           $('#search_songs_wrap').hide()
           searching = true
@@ -895,7 +895,7 @@ coffeescript ->
             $('#search_songs_wrap').show()
             searching = false
 
-        $('#add_song').live 'click', (e) ->
+        $(document).on 'click', '#add_song', (e) ->
           track =
             creator: ''
             title: ''
@@ -916,11 +916,11 @@ coffeescript ->
           else
             $('#del_song').attr 'disabled', 'disabled'
 
-        $('#playlist_items tr td').live 'click', (e) ->
+        $(document).on 'click', '#playlist_items tr td', (e) ->
           $(@).parent().toggleClass 'selected'
           update_del_song_button()
 
-        $('#add_album').live 'click', (e) ->
+        $(document).on 'click', '#add_album', (e) ->
           $('#album_search_modal').modal()
           return false
 
@@ -941,7 +941,7 @@ coffeescript ->
 
           return false
 
-        $('.show_discogs_master').live 'click', (e) ->
+        $(document).on 'click', '.show_discogs_master', (e) ->
           el = $(@)
           el.hide()
           el.siblings('.hide_discogs_master').show()
@@ -959,13 +959,13 @@ coffeescript ->
               result_el.html discogs_master_result_template res.data
           return false
 
-        $('.hide_discogs_master').live 'click', (e) ->
+        $(document).on 'click', '.hide_discogs_master', (e) ->
           $(@).hide()
           $(@).siblings('.show_discogs_master').show()
           $(@).parent().find('.discogs_master_result').hide()
           return false
 
-        $('.add_album_tracks').live 'click', (e) ->
+        $(document).on 'click', '.add_album_tracks', (e) ->
           if jspf.playlist.track.length is 0
             creator = $(@).parent().data 'artist'
             title = $(@).parent().data 'album'
@@ -1000,7 +1000,7 @@ coffeescript ->
             $('#album_search_modal').modal 'hide'
           return false
  
-        $('#add_lastfm').live 'click', (e) ->
+        $(document).on 'click', '#add_lastfm', (e) ->
           $('#lastfm_modal').modal()
           return false
 
@@ -1016,7 +1016,7 @@ coffeescript ->
 
           return false
        
-        $('.show_lastfm_playlist').live 'click', (e) ->
+        $(document).on 'click', '.show_lastfm_playlist', (e) ->
           el = $(@)
           el.hide()
           el.siblings('.hide_lastfm_playlist').show()
@@ -1031,13 +1031,13 @@ coffeescript ->
               result_el.html lastfm_playlist_result_template res
           return false
 
-        $('.hide_lastfm_playlist').live 'click', (e) ->
+        $(document).on 'click', '.hide_lastfm_playlist', (e) ->
           $(@).hide()
           $(@).siblings('.show_lastfm_playlist').show()
           $(@).parent().find('.lastfm_playlist_result').hide()
           return false
        
-        $('.add_lastfm_playlist_tracks').live 'click', (e) ->
+        $(document).on 'click', '.add_lastfm_playlist_tracks', (e) ->
           if jspf.playlist.track.length is 0
             creator = $(@).parent().data 'creator'
             console.log creator
@@ -1061,7 +1061,7 @@ coffeescript ->
 
             $('#lastfm_modal').modal 'hide'
 
-        $('button.del_playlist').live 'click', (e) ->
+        $(document).on 'click', 'button.del_playlist', (e) ->
           if confirm 'Are you sure you want to delete that playlist? This cannot be undone!'
             $(@).parent().hide()
             $.ajax
@@ -1076,7 +1076,7 @@ coffeescript ->
             .error (data) =>
               $(@).parent().show()
 
-        $('#show_gs_playlist').live 'click', (e) ->
+        $(document).on 'click', '#show_gs_playlist', (e) ->
           if not jspf.playlist.extension[gs_playlist_rel]?
             alert 'You must save the playlist, first.'
             return
@@ -1086,16 +1086,16 @@ coffeescript ->
             url: url
           ).modal()
 
-        $('button.getSong').live 'click', (e) ->
+        $(document).on 'click', 'button.getSong', (e) ->
           getSong $(@).parent().parent().index(), ->
             # DO NOTHING
           return false
         
-        $('#song_modal_search').live 'click', (e) ->
+        $(document).on 'click', '#song_modal_search', (e) ->
           getSong $(window.selectedRow).index(), null, true
           return false
 
-        $('.uploaded_playlist button.editTrack').live 'click', (e) ->
+        $(document).on 'click', '.uploaded_playlist button.editTrack', (e) ->
           e.stopPropagation()
 
           window.selectedRow = $(@).parent().parent()[0]
@@ -1106,7 +1106,7 @@ coffeescript ->
           $('#song_modal').modal()
           #getSong $(window.selectedRow).index(), null, true
 
-        $('#song_modal input').live 'change', ->
+        $(document).on 'change', '#song_modal input', ->
           i = $(selectedRow).index()
           song = jspf.playlist.track[i]
           delete song.chosen
@@ -1122,11 +1122,11 @@ coffeescript ->
           update_del_song_button()
           playlistDirtied()
         
-        $('#song_modal form').live 'submit', (e) ->
+        $(document).on 'submit', '#song_modal form', (e) ->
           e.preventDefault()
           return false
 
-        $('#song_modal button.select-song').live 'click', (e) ->
+        $(document).on 'click', '#song_modal button.select-song', (e) ->
           e.preventDefault()
           $('#song_modal button.select-song').removeClass('active').removeClass('chosen')
           $(@).addClass('active').addClass('chosen')
@@ -1147,7 +1147,7 @@ coffeescript ->
 
           return false
         
-        $('#save_playlist').live 'click', ->
+        $(document).on 'click', '#save_playlist', ->
           $('#save_playlist').button 'loading'
           to_save = $.extend true, jspf, {}
           for track in to_save.playlist.track

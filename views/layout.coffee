@@ -1,5 +1,5 @@
 doctype 5
-html ->
+html manifest:'spiffyshark.appcache', ->
   head ->
     meta charset:'utf-8'
     meta
@@ -166,11 +166,8 @@ html ->
             ###
 
     script src:'/coffeecup.js'
-    script src:'//cdnjs.cloudflare.com/ajax/libs/jquery/1.8.2/jquery.min.js'
     script src:'//cdnjs.cloudflare.com/ajax/libs/moment.js/1.7.2/moment.min.js'
-    script src:'/zappa/zappa.js'
-    script src:'/zappa/sammy.js'
-    script src:'/socket.io/socket.io.js'
+    script src:'/zappa/Zappa.js'
     script src:'/async.js'
     script src:'/xspf_parser.js'
     script src:'/bootstrap/js/bootstrap.js'

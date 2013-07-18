@@ -95,11 +95,14 @@ zappa.run config.port, ->
       req.session.errors.push
         msg: 'You must be logged in to perform that operation.'
       res.redirect redirect
+  
+  @enable 'minify'
 
   @use 'bodyParser',
     static: __dirname + '/public',
     'zappa',
     'partials',
+    'compress',
     @express.cookieParser(),
     session: secret: 'watlol',
     (req, res, next) ->
