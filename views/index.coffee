@@ -6,7 +6,7 @@ div class:'content container', id:'main', ->
         form id:'upload', enctype:'multipart/form-data', action:'#/upload_playlist', method:'post', ->
           input id:'upload_file', type:'file'
         div id:'import_buttons', ->
-          button id:'lastfm_main', class:'btn btn-lastfm'
+          button id:'lastfm_main', class:'btn btn-lastfm', '&nbsp;&nbsp;'
           text ' '
           span
             rel:'tooltip'
