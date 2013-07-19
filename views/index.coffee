@@ -53,7 +53,7 @@ div class:'content container', id:'about', ->
     section ->
       h3 'Who are you?'
       p '''
-      I'm Louis Acresti, a freelance programmer from Rochester, New York (soon to be in Austin, Texas).
+      I'm Louis Acresti, a freelance programmer from Rochester, New York.
       '''
       p '''
       I really love web development.
